@@ -71,12 +71,19 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
   const toc: TocEntry[] = [];
 
   const planImages = await planPages(report, all);
+  const planLinks: { page: number; x: number; y: number; w: number; h: number; code: string }[] = [];
   for (const pi of planImages) {
     current = 'Plantas'; newPage();
     text(`PLANTA — ${pi.plan.name}`.toUpperCase(), 12, true, margin, width, blue); y += 2;
     const h = Math.min(bottom - y - 8, width * pi.plan.height / pi.plan.width); const w = h * pi.plan.width / pi.plan.height;
-    pdf.addImage(pi.data, 'JPEG', margin + (width - w) / 2, y, w, h); y += h + 5;
-    text(`${pi.count} peças marcadas nesta planta`, 9, false, margin, width, muted);
+    const x0 = margin + (width - w) / 2, y0 = y;
+    pdf.addImage(pi.data, 'JPEG', x0, y0, w, h); y += h + 5;
+    const r = Math.max(14, pi.plan.width / 65), s = w / pi.plan.width;
+    for (const p of all.filter(q => q.marker?.planId === pi.plan.id)) {
+      const mx = x0 + p.marker!.x * w, my = y0 + p.marker!.y * h;
+      planLinks.push({ page: pdf.getNumberOfPages(), x: mx - r * 0.6 * s, y: my - r * 0.8 * s, w: r * (2 + p.code.length * 0.75) * s, h: r * 1.6 * s, code: p.code });
+    }
+    text(`${pi.count} peças marcadas nesta planta — toque em uma marcação para ir até a peça`, 9, false, margin, width, muted);
   }
   for (const g of groups) {
     current = g.segment.name; newPage();
@@ -145,6 +152,14 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
   if (!critical.length) text('Nenhuma peça com problema crítico.', 10, false, margin, width, muted);
   for (const g of critical) { ensure(12); text(g.segment.name, 10, true, margin, width, rgb(g.segment.color)); for (const p of g.pieces) text(`• ${p.code} — ${p.name || 'Sem descrição'} (${p.location || 'setor não informado'}): ${p.issues.filter(i => i.severity === 'Crítico').map(i => i.description).join('; ')}`, 9.5, false, margin + 3, width - 3); y += 3; }
   toc.push({ kind: 'segment', label: 'Resumo geral de problemas', color: '#232f3e', page: summaryPage });
+
+  // Plan markers become links to each piece's page
+  for (const l of planLinks) {
+    const target = toc.find(e => e.kind === 'piece' && e.code === l.code);
+    if (!target) continue;
+    pdf.setPage(l.page);
+    pdf.link(l.x, l.y, l.w, l.h, { pageNumber: target.page });
+  }
 
   // Fill summary pages
   let page = tocStart, line = 0; pdf.setPage(page); y = 26;
