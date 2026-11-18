@@ -109,7 +109,7 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
       const capH = caption.length * 4.5 + 8;
       let h = Math.min(108, width * photo.height / photo.width);
       const room = bottom - y - capH;
-      if (h > room && room >= h * 0.6) h = room;
+      if (h > room && room >= 65) h = room;
       const w = h * photo.width / photo.height;
       ensure(h + capH);
       pdf.addImage(photo.data, 'JPEG', margin + (width - w) / 2, y, w, h);
