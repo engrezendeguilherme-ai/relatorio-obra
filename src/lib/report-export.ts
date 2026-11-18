@@ -104,13 +104,17 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
     if (piece.notes) { y += 4; text('Observações', 10, true); text(piece.notes, 10); }
     if (piece.issues.length) { y += 4; text('Apontamentos', 10, true); for (const i of piece.issues) { ensure(6); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.setTextColor(...sevColor[i.severity]); pdf.text(i.severity.toUpperCase(), margin, y); const yy = y; text(i.description || 'Sem descrição', 10, false, margin + 24, width - 24); if (y === yy) y += 5; } }
     y += 7;
-    for (let i = 0; i < piece.photos.length; i += 2) {
-      const cellWidth = 83;
-      const cells = piece.photos.slice(i, i + 2).map(photo => { const h = Math.min(95, cellWidth * photo.height / photo.width); const w = h * photo.width / photo.height; const caption = pdf.splitTextToSize(photo.caption || 'Sem legenda', cellWidth) as string[]; return { photo, h, w, caption, total: h + caption.length * 4.5 + 8 }; });
-      const height = Math.max(...cells.map(c => c.total));
-      ensure(height);
-      cells.forEach((cell, col) => { const x = margin + col * 91; pdf.addImage(cell.photo.data, 'JPEG', x + (cellWidth - cell.w) / 2, y, cell.w, cell.h); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(...ink); pdf.text(cell.caption, x, y + cell.h + 5); });
-      y += height + 6;
+    for (const photo of piece.photos) {
+      const caption = pdf.splitTextToSize(photo.caption || 'Sem legenda', width) as string[];
+      const capH = caption.length * 4.5 + 8;
+      let h = Math.min(108, width * photo.height / photo.width);
+      const room = bottom - y - capH;
+      if (h > room && room >= h * 0.6) h = room;
+      const w = h * photo.width / photo.height;
+      ensure(h + capH);
+      pdf.addImage(photo.data, 'JPEG', margin + (width - w) / 2, y, w, h);
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(...ink); pdf.text(caption, margin, y + h + 5);
+      y += h + capH + 6;
     }
     if (y + 8 <= bottom) { pdf.setDrawColor(220, 225, 232); pdf.setLineWidth(.2); pdf.line(margin, y, margin + width, y); } y += 9;
   }
@@ -202,11 +206,14 @@ export async function generateWord(report: Report, filter: ReportFilter): Promis
       if (piece.notes) children.push(para(''), para('Observações', true), para(piece.notes));
       if (piece.issues.length) { children.push(para(''), para('Apontamentos', true)); for (const i of piece.issues) children.push(new Paragraph({ children: [new TextRun({ text: `${i.severity.toUpperCase()}  `, bold: true, color: i.severity === 'Crítico' ? 'BE123C' : i.severity === 'Moderado' ? 'C2410C' : 'B7791F' }), new TextRun(i.description)] })); }
       const rows = [];
-      for (let i = 0; i < piece.photos.length; i += 2) {
-        rows.push(new TableRow({ cantSplit: true, children: [0, 1].map(col => { const photo = piece.photos[i + col]; const content = []; if (photo) { const scale = Math.min(270 / photo.width, 300 / photo.height); content.push(new Paragraph({ keepNext: true, children: [new d.ImageRun({ type: 'jpg', data: toBytes(photo.data), transformation: { width: Math.round(photo.width * scale), height: Math.round(photo.height * scale) }, altText: { title: piece.code, description: photo.caption || piece.name, name: photo.id } })] }), para(photo.caption || 'Sem legenda')); } else content.push(para('')); return new TableCell({ width: { size: 4513, type: WidthType.DXA }, margins: { top: 120, bottom: 120, left: 100, right: 100 }, children: content }); }) }));
+      for (const photo of piece.photos) {
+        const content = [];
+        const scale = Math.min(590 / photo.width, 440 / photo.height);
+        content.push(new Paragraph({ keepNext: true, children: [new d.ImageRun({ type: 'jpg', data: toBytes(photo.data), transformation: { width: Math.round(photo.width * scale), height: Math.round(photo.height * scale) }, altText: { title: piece.code, description: photo.caption || piece.name, name: photo.id } })] }), para(photo.caption || 'Sem legenda'));
+        rows.push(new TableRow({ cantSplit: true, children: [new TableCell({ width: { size: 9026, type: WidthType.DXA }, margins: { top: 120, bottom: 120, left: 100, right: 100 }, children: content })] }));
       }
       children.push(para(''));
-      if (rows.length) children.push(new Table({ width: { size: 9026, type: WidthType.DXA }, columnWidths: [4513, 4513], rows }), para(''));
+      if (rows.length) children.push(new Table({ width: { size: 9026, type: WidthType.DXA }, columnWidths: [9026], rows }), para(''));
     }
     sections.push({ properties: page, footers: footer(g.segment.name), children });
   }
