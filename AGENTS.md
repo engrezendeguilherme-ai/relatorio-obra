@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Application architecture
+- Store reports and compressed photo data in IndexedDB through idb-keyval; this app is intentionally local-only and needs no Cloud connection.
+- Keep report models and validation in browser-safe pure modules, with storage in a hook and document generation dynamically loaded from user actions; this preserves SSR safety and keeps export libraries out of initial rendering.
+- Use the index route for the report workspace with three workflow steps; these steps edit the same local document rather than separate content pages.
