@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { get, set } from 'idb-keyval';
 import { toast } from 'sonner';
-import { emptyReport, shouldInitializeExample, type Report } from '@/lib/report-model';
+import { emptyReport, normalizeReport, shouldInitializeExample, type Report } from '@/lib/report-model';
 import { makeExampleReport } from '@/lib/example-report';
 
 const STORAGE_KEY = 'peca-a-peca-report-v1';
@@ -16,7 +16,7 @@ export function useReport() {
     let active = true;
     Promise.all([get<Report>(STORAGE_KEY), get<boolean>('example-report-initialized-v1')]).then(async ([stored, initialized]) => {
       const useExample = shouldInitializeExample(stored, initialized);
-      const initial = useExample ? await makeExampleReport() : stored ?? { ...emptyReport(), date: new Date().toLocaleDateString('sv-SE') };
+      const initial = useExample ? await makeExampleReport() : stored ? normalizeReport(stored) : { ...emptyReport(), date: new Date().toLocaleDateString('sv-SE') };
       if (!active) return;
       if (!initialized) { if (useExample) await set(STORAGE_KEY, initial); await set('example-report-initialized-v1', true); }
       lastSaved.current = JSON.stringify(initial); setReport(initial); setReady(true); setStatus('saved');

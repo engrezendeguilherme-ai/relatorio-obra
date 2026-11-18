@@ -1,12 +1,19 @@
 import { useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, Camera, GripVertical, ImagePlus, Loader2, Upload, X } from 'lucide-react';
+import { AlertTriangle, ArrowDown, ArrowUp, Camera, GripVertical, ImagePlus, Loader2, Plus, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { compressPhoto, CONDITIONS, moveItem, validatePiece, type Piece, type PiecePhoto } from '@/lib/report-model';
+import { compressPhoto, CONDITIONS, isDuplicateCode, moveItem, nextCode, SEVERITIES, validatePiece, type Piece, type PiecePhoto, type Segment, type Severity } from '@/lib/report-model';
 
-export function PieceEditor({ initial, onSave, onClose }: { initial: Piece; onSave: (piece: Piece) => void; onClose: () => void }) {
-  const [piece, setPiece] = useState(initial);
+export function PieceEditor({ initial, segments, pieces, onSave, onClose }: { initial: Piece; segments: Segment[]; pieces: Piece[]; onSave: (piece: Piece) => void; onClose: () => void }) {
+  const [piece, setPiece] = useState(() => { const seg = segments.find(s => s.id === initial.segmentId); return !initial.code && seg ? { ...initial, code: nextCode(seg.prefix, pieces, initial.id) } : initial; });
+  const suggested = useRef(initial.code ? '' : piece.code);
+  const duplicate = isDuplicateCode(piece.code, pieces, piece.id);
+  function chooseSegment(segmentId: string) {
+    const seg = segments.find(s => s.id === segmentId);
+    setPiece(p => { const auto = !p.code.trim() || p.code === suggested.current; const code = auto && seg ? nextCode(seg.prefix, pieces, p.id) : p.code; if (auto) suggested.current = code; return { ...p, segmentId, code }; });
+  }
+  const setIssue = (id: string, patch: { description?: string; severity?: Severity }) => setPiece(p => ({ ...p, issues: p.issues.map(i => i.id === id ? { ...i, ...patch } : i) }));
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const gallery = useRef<HTMLInputElement>(null), camera = useRef<HTMLInputElement>(null);
@@ -24,12 +31,15 @@ export function PieceEditor({ initial, onSave, onClose }: { initial: Piece; onSa
   return <Dialog open onOpenChange={open => { if (!open && !uploading) onClose(); }}><DialogContent className="piece-dialog"><DialogHeader><DialogTitle>{initial.code ? 'Editar peça' : 'Adicionar peça'}</DialogTitle><DialogDescription>Identificação, condição e registro fotográfico.</DialogDescription></DialogHeader>
     <form onSubmit={e => { e.preventDefault(); const message = validatePiece(piece); if (message) { setError(message); return; } onSave({ ...piece, code: piece.code.trim() }); }}>
       <div className="form-grid">
-        <label className="field">Código / número da peça <span className="required">*</span><input autoFocus value={piece.code} onChange={e => field('code', e.target.value)} placeholder="Ex.: PM-001" aria-required="true" /></label>
-        <label className="field">Nome / descrição<input value={piece.name} onChange={e => field('name', e.target.value)} placeholder="Ex.: Viga metálica" /></label>
+        <label className="field">Segmento <span className="required">*</span><select autoFocus value={piece.segmentId} onChange={e => chooseSegment(e.target.value)} aria-required="true"><option value="" disabled>Escolha o segmento</option>{segments.map(s => <option key={s.id} value={s.id}>{s.name} ({s.prefix})</option>)}</select></label>
+        <label className="field">Código / número da peça <span className="required">*</span><input value={piece.code} onChange={e => field('code', e.target.value)} placeholder="Ex.: PL-001" aria-required="true" aria-invalid={duplicate} />{duplicate && <span className="field-warning"><AlertTriangle size={13} />Já existe uma peça com este código.</span>}</label>
         <label className="field">Localização / setor<input value={piece.location} onChange={e => field('location', e.target.value)} placeholder="Ex.: Galpão A" /></label>
         <div className="form-grid compact"><label className="field">Condição<select value={piece.condition} onChange={e => field('condition', e.target.value)}>{CONDITIONS.map(c => <option key={c}>{c}</option>)}</select></label><label className="field">Quantidade<input type="number" min={1} step={1} value={piece.quantity} onChange={e => field('quantity', Number(e.target.value))} /></label></div>
+        <label className="field">Nome / descrição<input value={piece.name} onChange={e => field('name', e.target.value)} placeholder="Ex.: Pilar metálico" /></label>
         <label className="field full">Observações<textarea rows={2} value={piece.notes} onChange={e => field('notes', e.target.value)} placeholder="Detalhes sobre esta peça..." /></label>
       </div>
+      <div className="section-label"><h3>Apontamentos <span className="count-badge">{piece.issues.length}</span></h3></div>
+      <div className="issue-list">{piece.issues.map((issue, n) => <div className="issue-row" key={issue.id}><select aria-label={`Gravidade do apontamento ${n + 1}`} value={issue.severity} onChange={e => setIssue(issue.id, { severity: e.target.value as Severity })}>{SEVERITIES.map(v => <option key={v}>{v}</option>)}</select><input aria-label={`Descrição do apontamento ${n + 1}`} value={issue.description} onChange={e => setIssue(issue.id, { description: e.target.value })} placeholder="Descreva o problema encontrado..." /><Button type="button" variant="ghost" size="icon" aria-label={`Remover apontamento ${n + 1}`} onClick={() => setPiece(p => ({ ...p, issues: p.issues.filter(i => i.id !== issue.id) }))}><X /></Button></div>)}<Button type="button" variant="outline" size="sm" className="self-start" onClick={() => setPiece(p => ({ ...p, issues: [...p.issues, { id: crypto.randomUUID(), description: '', severity: 'Leve' }] }))}><Plus />Adicionar apontamento</Button></div>
       <div className="section-label"><h3>Fotos da peça <span className="count-badge">{piece.photos.length}</span></h3></div>
       <div className="photo-drop" onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); void upload(e.dataTransfer.files); }}>
         {uploading ? <Loader2 className="animate-spin" /> : <ImagePlus />}
