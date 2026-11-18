@@ -7,9 +7,12 @@ export type Severity = (typeof SEVERITIES)[number];
 export interface PiecePhoto { id: string; data: string; caption: string; width: number; height: number }
 export interface Issue { id: string; description: string; severity: Severity }
 export interface Segment { id: string; name: string; prefix: string; color: string }
-export interface Piece { id: string; segmentId: string; code: string; name: string; location: string; condition: Condition; quantity: number; notes: string; issues: Issue[]; photos: PiecePhoto[] }
+export interface PlanSheet { id: string; name: string; data: string; width: number; height: number }
+/** Position on a plan sheet, x/y as fractions (0–1) of the sheet size. */
+export interface PlanMarker { planId: string; x: number; y: number }
+export interface Piece { marker?: PlanMarker | null; id: string; segmentId: string; code: string; name: string; location: string; condition: Condition; quantity: number; notes: string; issues: Issue[]; photos: PiecePhoto[] }
 export interface Logo { data: string; width: number; height: number }
-export interface Report { title: string; client: string; date: string; responsible: string; notes: string; footer: string; logo: Logo | null; segments: Segment[]; pieces: Piece[] }
+export interface Report { title: string; client: string; date: string; responsible: string; notes: string; footer: string; logo: Logo | null; plans: PlanSheet[]; segments: Segment[]; pieces: Piece[] }
 
 export const DEFAULT_SEGMENTS: Segment[] = [
   { id: 'seg-pilares', name: 'Pilares', prefix: 'PL', color: '#2059d2' },
@@ -21,13 +24,14 @@ export const DEFAULT_SEGMENTS: Segment[] = [
   { id: 'seg-calhas', name: 'Calhas', prefix: 'CL', color: '#0e7490' },
   { id: 'seg-outros', name: 'Outros', prefix: 'OU', color: '#4b5563' },
 ];
-export function emptyReport(): Report { return { title: '', client: '', date: '', responsible: '', notes: '', footer: '', logo: null, segments: structuredClone(DEFAULT_SEGMENTS), pieces: [] }; }
+export function emptyReport(): Report { return { title: '', client: '', date: '', responsible: '', notes: '', footer: '', logo: null, plans: [], segments: structuredClone(DEFAULT_SEGMENTS), pieces: [] }; }
 /** Fills in fields added after the first version so previously saved reports keep working. */
 export function normalizeReport(stored: Partial<Report>): Report {
   const base = emptyReport();
   const segments = stored.segments?.length ? stored.segments : base.segments;
   const fallback = segments.find(s => s.name === 'Outros')?.id ?? segments[segments.length - 1]!.id;
-  return { ...base, ...stored, segments, pieces: (stored.pieces ?? []).map(p => ({ ...p, segmentId: p.segmentId && segments.some(s => s.id === p.segmentId) ? p.segmentId : fallback, issues: p.issues ?? [] })) };
+  const plans = stored.plans ?? [];
+  return { ...base, ...stored, segments, plans, pieces: (stored.pieces ?? []).map(p => ({ ...p, marker: p.marker && plans.some(pl => pl.id === p.marker!.planId) ? p.marker : null, segmentId: p.segmentId && segments.some(s => s.id === p.segmentId) ? p.segmentId : fallback, issues: p.issues ?? [] })) };
 }
 export function shouldInitializeExample(report: Report | undefined, initialized: boolean | undefined): boolean {
   return !initialized && (!report || (!report.title && !report.client && !report.responsible && !report.notes && report.pieces.length === 0));
@@ -100,3 +104,6 @@ export async function compressPhoto(file: File, max = MAX_IMAGE_WIDTH): Promise<
     return { id: crypto.randomUUID(), data: canvas.toDataURL('image/jpeg', IMAGE_QUALITY), caption: '', width, height };
   } finally { URL.revokeObjectURL(url); }
 }
+export function piecesOnPlan(pieces: Piece[], planId: string) { return pieces.filter(p => p.marker?.planId === planId).sort((a, b) => naturalCompare(a.code, b.code)); }
+export function removePlan(report: Report, planId: string): Report { return { ...report, plans: report.plans.filter(p => p.id !== planId), pieces: report.pieces.map(p => p.marker?.planId === planId ? { ...p, marker: null } : p) }; }
+export function clampMarker(x: number, y: number) { const c = (v: number) => Math.min(1, Math.max(0, v)); return { x: c(x), y: c(y) }; }

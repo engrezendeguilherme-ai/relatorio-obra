@@ -34,3 +34,15 @@ describe('Segmentos', () => {
   });
   it('relatórios antigos recebem segmentos e vão para Outros', () => { const r = normalizeReport({ title: 'x', pieces: [{ ...piece, segmentId: undefined as unknown as string }] }); expect(r.pieces[0]!.segmentId).toBe('seg-outros'); expect(r.segments.length).toBe(8); });
 });
+import { removePlan, clampMarker, piecesOnPlan } from '@/lib/report-model';
+describe('Plantas', () => {
+  const plan = { id: 'pl1', name: 'Planta', data: '', width: 10, height: 10 };
+  it('excluir planta remove só as marcações dela', () => {
+    const r = { ...emptyReport(), plans: [plan], pieces: [{ ...piece, marker: { planId: 'pl1', x: .5, y: .5 } }, { ...piece, id: '2', marker: { planId: 'outra', x: .1, y: .1 } }] };
+    const out = removePlan(r, 'pl1');
+    expect(out.plans).toEqual([]); expect(out.pieces[0]!.marker).toBeNull(); expect(out.pieces[1]!.marker?.planId).toBe('outra');
+  });
+  it('posição fica dentro da planta', () => { expect(clampMarker(1.2, -0.1)).toEqual({ x: 1, y: 0 }); });
+  it('marcação de planta inexistente é descartada ao abrir', () => { expect(normalizeReport({ pieces: [{ ...piece, marker: { planId: 'x', x: 0, y: 0 } }] }).pieces[0]!.marker).toBeNull(); });
+  it('lista peças da planta em ordem de código', () => { expect(piecesOnPlan([{ ...piece, id: 'a', code: 'PL-10', marker: { planId: 'pl1', x: 0, y: 0 } }, { ...piece, id: 'b', code: 'PL-2', marker: { planId: 'pl1', x: 0, y: 0 } }], 'pl1').map(p => p.code)).toEqual(['PL-2', 'PL-10']); });
+});

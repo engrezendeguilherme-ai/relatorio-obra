@@ -345,3 +345,23 @@
   .header-inner { height: auto; min-height: 73px; padding-top: 12px; padding-bottom: 12px; flex-wrap: wrap; }
   .header-inner > .flex { flex-wrap: wrap; gap: 8px; }
 }
+
+/* Plantas */
+.plan-board { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); overflow: hidden; }
+.plan-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.plan-toolbar select { width: auto; max-width: 60%; }
+.plan-scroll { overflow: auto; max-height: 70vh; background: var(--muted); }
+.plan-sheet { position: relative; min-width: 100%; }
+.plan-sheet img { display: block; width: 100%; height: auto; user-select: none; }
+.plan-sheet.placing { cursor: crosshair; }
+.plan-marker { position: absolute; transform: translate(-7px, -7px); display: flex; align-items: center; gap: 3px; padding: 0; background: none; border: 0; cursor: pointer; }
+.plan-marker i { width: 14px; height: 14px; border-radius: 50%; background: var(--marker); border: 2px solid var(--surface); box-shadow: 0 1px 3px rgb(0 0 0 / .35); flex-shrink: 0; }
+.plan-marker span { background: var(--marker); color: var(--primary-foreground); font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 4px; white-space: nowrap; box-shadow: 0 1px 3px rgb(0 0 0 / .3); }
+.plan-marker.active i { width: 20px; height: 20px; transform: translate(-3px, 0); outline: 3px solid var(--marker); outline-offset: 1px; }
+.plan-marker.dim { opacity: .45; }
+.plan-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-top: 12px; }
+.plan-item { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.plan-item img { width: 100%; height: 110px; object-fit: cover; background: var(--muted); }
+.plan-item div { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 6px 8px; font-size: 12px; }
+.plan-item div span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.marker-field { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; }

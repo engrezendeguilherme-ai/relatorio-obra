@@ -8,3 +8,5 @@
 - [x] Verificar uso no computador e celular e testes das regras.- [x] Segmentos (configurações, cores, prefixos, código automático), filtros na lista, apontamentos por gravidade.
 - [x] Relatório PDF/Word agrupado por segmento com sumário clicável, resumo de problemas, filtros e exportação Excel; logo e rodapé editáveis.
 - [x] Relatórios salvos e relatório de correções (antes/depois) em PDF.
+- [x] Plantas do projeto (PDF/imagem) com marcação das peças, visão "Na planta" e planta no PDF/Word.
+- [ ] Modelo 3D (IFC) — próxima etapa, aguardando confirmação do usuário.

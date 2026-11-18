@@ -37,3 +37,4 @@ use the editor.
 - Report grouping, stats and issue ordering live in pure functions in `report-model.ts`, shared by preview, PDF, Word and Excel; keeps every output consistent.
 - PDF summary pages are reserved up front and filled after layout; the preview reuses `buildPdf` page numbers so the on-screen summary matches the file.
 - Saved reports are independent snapshots (`saved-reports-v1`) and corrections are keyed by snapshot id (`corrections-v1`) with per-issue status, note and photos; later edits in the workspace never alter a saved report or its corrections.
+- Project plans are stored on the report as JPEG sheets (PDF pages rendered with pdfjs-dist) and pieces keep an optional marker with fractional x/y; outputs draw markers onto the sheet so PDF, Word and screen match at any size.

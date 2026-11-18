@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react';
-import { AlertTriangle, ArrowDown, ArrowUp, Camera, GripVertical, ImagePlus, Loader2, Plus, Upload, X } from 'lucide-react';
+import { AlertTriangle, ArrowDown, ArrowUp, Camera, GripVertical, ImagePlus, Loader2, MapPin, Plus, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { compressPhoto, CONDITIONS, isDuplicateCode, moveItem, nextCode, SEVERITIES, validatePiece, type Piece, type PiecePhoto, type Segment, type Severity } from '@/lib/report-model';
+import { compressPhoto, CONDITIONS, isDuplicateCode, moveItem, nextCode, SEVERITIES, validatePiece, type Piece, type PiecePhoto, type PlanSheet, type Segment, type Severity } from '@/lib/report-model';
+import { PlanBoard } from '@/components/plan-board';
 
-export function PieceEditor({ initial, segments, pieces, onSave, onClose }: { initial: Piece; segments: Segment[]; pieces: Piece[]; onSave: (piece: Piece) => void; onClose: () => void }) {
+export function PieceEditor({ initial, segments, pieces, plans = [], onSave, onClose }: { initial: Piece; segments: Segment[]; pieces: Piece[]; plans?: PlanSheet[]; onSave: (piece: Piece) => void; onClose: () => void }) {
   const [piece, setPiece] = useState(() => { const seg = segments.find(s => s.id === initial.segmentId); return !initial.code && seg ? { ...initial, code: nextCode(seg.prefix, pieces, initial.id) } : initial; });
   const suggested = useRef(initial.code ? '' : piece.code);
   const duplicate = isDuplicateCode(piece.code, pieces, piece.id);
@@ -15,6 +16,9 @@ export function PieceEditor({ initial, segments, pieces, onSave, onClose }: { in
   }
   const setIssue = (id: string, patch: { description?: string; severity?: Severity }) => setPiece(p => ({ ...p, issues: p.issues.map(i => i.id === id ? { ...i, ...patch } : i) }));
   const [uploading, setUploading] = useState(false);
+  const [placing, setPlacing] = useState(false);
+  const [planId, setPlanId] = useState(initial.marker?.planId ?? plans[0]?.id ?? '');
+  const markedPlan = plans.find(pl => pl.id === piece.marker?.planId);
   const [error, setError] = useState('');
   const gallery = useRef<HTMLInputElement>(null), camera = useRef<HTMLInputElement>(null);
   const dragPhoto = useRef<number | null>(null);
@@ -38,6 +42,11 @@ export function PieceEditor({ initial, segments, pieces, onSave, onClose }: { in
         <label className="field">Nome / descrição<input value={piece.name} onChange={e => field('name', e.target.value)} placeholder="Ex.: Pilar metálico" /></label>
         <label className="field full">Observações<textarea rows={2} value={piece.notes} onChange={e => field('notes', e.target.value)} placeholder="Detalhes sobre esta peça..." /></label>
       </div>
+      <div className="section-label"><h3>Localização na planta</h3></div>
+      {plans.length === 0 ? <p className="text-sm text-muted-foreground">Envie a planta do projeto em “Dados do relatório” para marcar onde fica esta peça.</p> : <>
+        <div className="marker-field"><span>{markedPlan ? <>Marcada em <b>{markedPlan.name}</b></> : 'Ainda não marcada na planta.'}</span><Button type="button" variant="outline" size="sm" onClick={() => setPlacing(v => !v)}><MapPin />{placing ? 'Fechar planta' : markedPlan ? 'Alterar posição' : 'Marcar na planta'}</Button>{piece.marker && <Button type="button" variant="ghost" size="sm" onClick={() => setPiece(p => ({ ...p, marker: null }))}>Remover marcação</Button>}</div>
+        {placing && <div className="mt-3"><p className="mb-2 text-xs text-muted-foreground">Toque no ponto da peça na planta. Use + e − para aproximar.</p><PlanBoard plans={plans} pieces={[...pieces.filter(p => p.id !== piece.id), piece]} segments={segments} planId={planId} onPlanChange={setPlanId} activeId={piece.id} onPlace={m => setPiece(p => ({ ...p, marker: m }))} /></div>}
+      </>}
       <div className="section-label"><h3>Apontamentos <span className="count-badge">{piece.issues.length}</span></h3></div>
       <div className="issue-list">{piece.issues.map((issue, n) => <div className="issue-row" key={issue.id}><select aria-label={`Gravidade do apontamento ${n + 1}`} value={issue.severity} onChange={e => setIssue(issue.id, { severity: e.target.value as Severity })}>{SEVERITIES.map(v => <option key={v}>{v}</option>)}</select><input aria-label={`Descrição do apontamento ${n + 1}`} value={issue.description} onChange={e => setIssue(issue.id, { description: e.target.value })} placeholder="Descreva o problema encontrado..." /><Button type="button" variant="ghost" size="icon" aria-label={`Remover apontamento ${n + 1}`} onClick={() => setPiece(p => ({ ...p, issues: p.issues.filter(i => i.id !== issue.id) }))}><X /></Button></div>)}<Button type="button" variant="outline" size="sm" className="self-start" onClick={() => setPiece(p => ({ ...p, issues: [...p.issues, { id: crypto.randomUUID(), description: '', severity: 'Leve' }] }))}><Plus />Adicionar apontamento</Button></div>
       <div className="section-label"><h3>Fotos da peça <span className="count-badge">{piece.photos.length}</span></h3></div>

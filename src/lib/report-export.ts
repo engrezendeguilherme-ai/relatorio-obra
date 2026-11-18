@@ -1,3 +1,4 @@
+import { planWithMarkers } from './plan-files';
 import { consolidatedIssues, countSeverity, criticalBySegment, formatDate, groupBySegment, segmentStats, CONDITIONS, SEVERITIES, type Piece, type Report, type ReportFilter, type SegmentGroup } from './report-model';
 
 export function filename(report: Report, extension: string) {
@@ -69,6 +70,14 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
   for (let i = 0; i < tocPages; i++) newPage();
   const toc: TocEntry[] = [];
 
+  const planImages = await planPages(report, all);
+  for (const pi of planImages) {
+    current = 'Plantas'; newPage();
+    text(`PLANTA — ${pi.plan.name}`.toUpperCase(), 12, true, margin, width, blue); y += 2;
+    const h = Math.min(bottom - y - 8, width * pi.plan.height / pi.plan.width); const w = h * pi.plan.width / pi.plan.height;
+    pdf.addImage(pi.data, 'JPEG', margin + (width - w) / 2, y, w, h); y += h + 5;
+    text(`${pi.count} peças marcadas nesta planta`, 9, false, margin, width, muted);
+  }
   for (const g of groups) {
     current = g.segment.name; newPage();
     toc.push({ kind: 'segment', label: g.segment.name, color: g.segment.color, page: pdf.getNumberOfPages() });
@@ -94,7 +103,7 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
     toc.push({ kind: 'piece', label: piece.code, code: piece.code, name: piece.name, location: piece.location, condition: piece.condition, issues: piece.issues.length, page: pdf.getNumberOfPages() });
     pdf.setFillColor(...color); pdf.rect(margin, y - 4.5, 1.6, 7, 'F');
     text(`${piece.code} — ${piece.name || 'Peça sem descrição'}`, 15, true, margin + 4, width - 4); y += 3;
-    for (const [label, value] of [['Localização / setor', piece.location || 'Não informado'], ['Condição', piece.condition], ['Quantidade', String(piece.quantity)]] as [string, string][]) {
+    for (const [label, value] of [['Localização / setor', piece.location || 'Não informado'], ['Condição', piece.condition], ['Quantidade', String(piece.quantity)], ...(piece.marker ? [['Planta', report.plans.find(x => x.id === piece.marker!.planId)?.name ?? '—']] : [])] as [string, string][]) {
       ensure(12);
       const lines = pdf.splitTextToSize(value, 110) as string[]; const rowHeight = Math.max(9, lines.length * 5 + 4);
       pdf.setFillColor(245, 247, 250); pdf.rect(margin, y - 4.5, width, rowHeight, 'F');
@@ -169,6 +178,11 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
 }
 export async function generatePdf(report: Report, filter: ReportFilter): Promise<Blob> { return (await buildPdf(report, filter)).pdf.output('blob'); }
 
+async function planPages(report: Report, pieces: Piece[]) {
+  const marked = report.plans.map(plan => ({ plan, pieces: pieces.filter(p => p.marker?.planId === plan.id) })).filter(x => x.pieces.length);
+  if (!marked.length) return [];
+  return Promise.all(marked.map(async x => ({ plan: x.plan, count: x.pieces.length, data: await planWithMarkers(x.plan, x.pieces, report.segments) })));
+}
 export async function generateWord(report: Report, filter: ReportFilter): Promise<Blob> {
   const d = await import('docx');
   const { Paragraph, TextRun, Table, TableRow, TableCell, WidthType, ShadingType } = d;
@@ -193,6 +207,10 @@ export async function generateWord(report: Report, filter: ReportFilter): Promis
   toc.push(tocRow('Resumo geral de problemas', 'resumo_problemas', true));
 
   const sections = [{ properties: page, footers: footer(''), children: cover }, { properties: page, footers: footer(''), children: toc }];
+  for (const pi of await planPages(report, all)) {
+    const scale = Math.min(600 / pi.plan.width, 820 / pi.plan.height);
+    sections.push({ properties: page, footers: footer('Plantas'), children: [new Paragraph({ heading: d.HeadingLevel.HEADING_1, children: [new TextRun(`Planta — ${pi.plan.name}`)] }), new Paragraph({ children: [new d.ImageRun({ type: 'jpg', data: toBytes(pi.data), transformation: { width: Math.round(pi.plan.width * scale), height: Math.round(pi.plan.height * scale) } })] }), para(`${pi.count} peças marcadas nesta planta`, false, '6E7782')] });
+  }
   for (const g of groups) {
     const color = g.segment.color.replace('#', '').toUpperCase(); const s = segmentStats(g.pieces);
     const children: (InstanceType<typeof Paragraph> | InstanceType<typeof Table>)[] = [
@@ -202,7 +220,7 @@ export async function generateWord(report: Report, filter: ReportFilter): Promis
     ];
     for (const piece of g.pieces) {
       children.push(new Paragraph({ heading: d.HeadingLevel.HEADING_2, keepNext: true, border: { left: { style: d.BorderStyle.SINGLE, size: 24, color, space: 6 } }, children: [new d.Bookmark({ id: bm(`p_${piece.id}`), children: [new TextRun(`${piece.code} — ${piece.name || 'Peça sem descrição'}`)] })] }),
-        info([['Localização / setor', piece.location || 'Não informado'], ['Condição', piece.condition], ['Quantidade', String(piece.quantity)]]));
+        info([['Localização / setor', piece.location || 'Não informado'], ['Condição', piece.condition], ['Quantidade', String(piece.quantity)], ...(piece.marker ? [['Planta', report.plans.find(x => x.id === piece.marker!.planId)?.name ?? '—']] : []) as [string, string][]]));
       if (piece.notes) children.push(para(''), para('Observações', true), para(piece.notes));
       if (piece.issues.length) { children.push(para(''), para('Apontamentos', true)); for (const i of piece.issues) children.push(new Paragraph({ children: [new TextRun({ text: `${i.severity.toUpperCase()}  `, bold: true, color: i.severity === 'Crítico' ? 'BE123C' : i.severity === 'Moderado' ? 'C2410C' : 'B7791F' }), new TextRun(i.description)] })); }
       const rows = [];
