@@ -55,8 +55,14 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
 
   // Cover
   pageSegment[1] = '';
-  if (report.logo) { const h = Math.min(24, 60 * report.logo.height / report.logo.width); const w = h * report.logo.width / report.logo.height; pdf.addImage(report.logo.data, 'JPEG', margin, 18, w, h); y = 18 + h + 14; } else { pdf.setDrawColor(...blue); pdf.setLineWidth(1); pdf.line(margin, 22, 42, 22); y = 40; }
-  text('RELATÓRIO DE ESTRUTURA METÁLICA', 10, true); y += 14;
+  if (report.logo) {
+    const h = Math.min(24, 60 * report.logo.height / report.logo.width); const w = h * report.logo.width / report.logo.height;
+    pdf.addImage(report.logo.data, 'JPEG', margin, 18, w, h);
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10); pdf.setTextColor(...ink);
+    pdf.text('RELATÓRIO DE ESTRUTURA METÁLICA', margin + w + 6, 18 + h / 2 + 1.8);
+    y = 18 + h + 14;
+  } else { pdf.setDrawColor(...blue); pdf.setLineWidth(1); pdf.line(margin, 22, 42, 22); y = 40; text('RELATÓRIO DE ESTRUTURA METÁLICA', 10, true); }
+  y += 14;
   text(report.title || 'Relatório de peças', 28, true); y += 14;
   for (const [label, value] of [['Local / cliente', report.client], ['Data', formatDate(report.date)], ['Responsável', report.responsible]] as [string, string][]) { text(label.toUpperCase(), 9, true); text(value || 'Não informado', 12); y += 8; }
   const all = groups.flatMap(g => g.pieces);
@@ -212,8 +218,14 @@ export async function generateWord(report: Report, filter: ReportFilter): Promis
   const toBytes = (data: string) => Uint8Array.from(atob(data.split(',')[1] ?? ''), c => c.charCodeAt(0));
 
   const cover: (InstanceType<typeof Paragraph> | InstanceType<typeof Table>)[] = [];
-  if (report.logo) { const h = Math.min(90, 220 * report.logo.height / report.logo.width); cover.push(new Paragraph({ children: [new d.ImageRun({ type: 'jpg', data: toBytes(report.logo.data), transformation: { width: Math.round(h * report.logo.width / report.logo.height), height: Math.round(h) } })], spacing: { after: 300 } })); }
-  cover.push(para('RELATÓRIO DE ESTRUTURA METÁLICA', true), new Paragraph({ heading: d.HeadingLevel.TITLE, children: [new TextRun(report.title || 'Relatório de peças')], spacing: { before: 400, after: 400 } }),
+  if (report.logo) {
+    const h = Math.min(90, 220 * report.logo.height / report.logo.width);
+    cover.push(new Table({ width: { size: 9026, type: WidthType.DXA }, columnWidths: [3400, 5626], rows: [new TableRow({ children: [
+      new TableCell({ width: { size: 3400, type: WidthType.DXA }, verticalAlign: 'center' as never, children: [new Paragraph({ children: [new d.ImageRun({ type: 'jpg', data: toBytes(report.logo.data), transformation: { width: Math.round(h * report.logo.width / report.logo.height), height: Math.round(h) } })] })] }),
+      new TableCell({ width: { size: 5626, type: WidthType.DXA }, verticalAlign: 'center' as never, children: [new Paragraph({ children: [new TextRun({ text: 'RELATÓRIO DE ESTRUTURA METÁLICA', bold: true })] })] }),
+    ] })] }), para(''));
+  } else cover.push(para('RELATÓRIO DE ESTRUTURA METÁLICA', true));
+  cover.push(new Paragraph({ heading: d.HeadingLevel.TITLE, children: [new TextRun(report.title || 'Relatório de peças')], spacing: { before: 400, after: 400 } }),
     info([['Local / cliente', report.client || 'Não informado'], ['Data', formatDate(report.date)], ['Responsável', report.responsible || 'Não informado'], ['Segmentos', String(groups.length)], ['Total de peças', String(all.length)]]), para(''), para('Observações gerais', true), para(report.notes || 'Nenhuma observação.'));
 
   const tocRow = (label: string, anchor: string, bold: boolean, indent = 0) => new Paragraph({ tabStops: [{ type: d.TabStopType.RIGHT, position: 9026, leader: d.LeaderType.DOT }], indent: { left: indent }, spacing: { after: bold ? 80 : 30, before: bold ? 160 : 0 }, children: [new d.InternalHyperlink({ anchor, children: [new TextRun({ text: label, bold, size: bold ? 22 : 18 })] }), new TextRun({ text: '\t', size: 18 }), new d.PageReference(anchor)] });

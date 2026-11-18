@@ -10,3 +10,4 @@
 - [x] Relatórios salvos e relatório de correções (antes/depois) em PDF.
 - [x] Plantas do projeto (PDF/imagem) com marcação das peças, visão "Na planta" e planta no PDF/Word.
 - [ ] Modelo 3D (IFC) — próxima etapa, aguardando confirmação do usuário.
+- [x] Alinhar "Relatório de estrutura metálica" ao lado da logo na capa (pré-visualização, PDF e Word).
