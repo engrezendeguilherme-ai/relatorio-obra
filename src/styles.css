@@ -341,3 +341,7 @@
   .correction-body { grid-template-columns: 1fr; }
   .correction-head select { width: 100%; }
 }
+@media (max-width: 760px) {
+  .header-inner { height: auto; min-height: 73px; padding-top: 12px; padding-bottom: 12px; flex-wrap: wrap; }
+  .header-inner > .flex { flex-wrap: wrap; gap: 8px; }
+}
