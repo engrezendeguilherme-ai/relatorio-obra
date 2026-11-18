@@ -7,7 +7,7 @@ import { useArchive } from '@/hooks/use-archive';
 import { CORRECTION_STATUSES, correctionRows, correctionStats, emptyCorrection, itemOf, type Correction, type CorrectionItem } from '@/lib/correction-model';
 import { compressPhoto, formatDate } from '@/lib/report-model';
 
-export const Route = createFileRoute('/correcao/$id')({
+export const Route = createFileRoute('/_authenticated/correcao/$id')({
   head: () => ({ meta: [
     { title: 'Registro de correções | Relatórios da estrutura metálica' },
     { name: 'description', content: 'Registre foto e observação da correção de cada apontamento e gere o relatório de correções.' },

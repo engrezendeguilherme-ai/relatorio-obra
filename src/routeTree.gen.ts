@@ -9,86 +9,134 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as RelatoriosRouteImport } from './routes/relatorios'
-import { Route as CorrecaoIdRouteImport } from './routes/correcao.$id'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
+import { Route as AuthenticatedCorrecaoIdRouteImport } from './routes/_authenticated/correcao.$id'
 
-const IndexRoute = IndexRouteImport.update({
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const RelatoriosRoute = RelatoriosRouteImport.update({
+const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const CorrecaoIdRoute = CorrecaoIdRouteImport.update({
+const AuthenticatedCorrecaoIdRoute = AuthenticatedCorrecaoIdRouteImport.update({
   id: '/correcao/$id',
   path: '/correcao/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/relatorios': typeof RelatoriosRoute
-  '/correcao/$id': typeof CorrecaoIdRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/auth': typeof AuthRoute
+  '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/correcao/$id': typeof AuthenticatedCorrecaoIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/relatorios': typeof RelatoriosRoute
-  '/correcao/$id': typeof CorrecaoIdRoute
+  '/auth': typeof AuthRoute
+  '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/correcao/$id': typeof AuthenticatedCorrecaoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/relatorios': typeof RelatoriosRoute
-  '/correcao/$id': typeof CorrecaoIdRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/correcao/$id': typeof AuthenticatedCorrecaoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/relatorios' | '/correcao/$id'
+  fullPaths: '/' | '/auth' | '/relatorios' | '/correcao/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/relatorios' | '/correcao/$id'
-  id: '__root__' | '/' | '/relatorios' | '/correcao/$id'
+  to: '/auth' | '/relatorios' | '/' | '/correcao/$id'
+  id:
+    | '__root__'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/relatorios'
+    | '/_authenticated/'
+    | '/_authenticated/correcao/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  RelatoriosRoute: typeof RelatoriosRoute
-  CorrecaoIdRoute: typeof CorrecaoIdRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/relatorios': {
-      id: '/relatorios'
+    '/_authenticated/relatorios': {
+      id: '/_authenticated/relatorios'
       path: '/relatorios'
       fullPath: '/relatorios'
-      preLoaderRoute: typeof RelatoriosRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/correcao/$id': {
-      id: '/correcao/$id'
+    '/_authenticated/correcao/$id': {
+      id: '/_authenticated/correcao/$id'
       path: '/correcao/$id'
       fullPath: '/correcao/$id'
-      preLoaderRoute: typeof CorrecaoIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedCorrecaoIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedCorrecaoIdRoute: typeof AuthenticatedCorrecaoIdRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedCorrecaoIdRoute: AuthenticatedCorrecaoIdRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  RelatoriosRoute: RelatoriosRoute,
-  CorrecaoIdRoute: CorrecaoIdRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

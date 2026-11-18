@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { get, set } from 'idb-keyval';
+import { get, set } from '@/lib/cloud-store';
 import { toast } from 'sonner';
 import { emptyReport, normalizeReport, shouldInitializeExample, type Report } from '@/lib/report-model';
 import { makeExampleReport } from '@/lib/example-report';

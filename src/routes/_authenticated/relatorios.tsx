@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { ArrowLeft, Boxes, ClipboardCheck, FolderOpen, Trash2, Wrench } from 'lucide-react';
-import { set } from 'idb-keyval';
+import { set } from '@/lib/cloud-store';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,7 +9,7 @@ import { useArchive } from '@/hooks/use-archive';
 import { correctionRows, correctionStats, emptyCorrection, issueCount } from '@/lib/correction-model';
 import { formatDate } from '@/lib/report-model';
 
-export const Route = createFileRoute('/relatorios')({
+export const Route = createFileRoute('/_authenticated/relatorios')({
   head: () => ({ meta: [
     { title: 'Relatórios salvos | Relatórios da estrutura metálica' },
     { name: 'description', content: 'Consulte relatórios de vistoria salvos e registre as correções de cada apontamento.' },

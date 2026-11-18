@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { get, set } from 'idb-keyval';
+import { get, set } from '@/lib/cloud-store';
 import { toast } from 'sonner';
 import type { Correction, SavedReport } from '@/lib/correction-model';
 
