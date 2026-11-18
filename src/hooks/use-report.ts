@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { get, set } from 'idb-keyval';
 import { toast } from 'sonner';
-import { emptyReport, type Report } from '@/lib/report-model';
+import { emptyReport, shouldInitializeExample, type Report } from '@/lib/report-model';
+import { makeExampleReport } from '@/lib/example-report';
 
 const STORAGE_KEY = 'peca-a-peca-report-v1';
 export function useReport() {
@@ -13,9 +14,11 @@ export function useReport() {
   const notified = useRef(false);
   useEffect(() => {
     let active = true;
-    get<Report>(STORAGE_KEY).then((stored) => {
+    Promise.all([get<Report>(STORAGE_KEY), get<boolean>('example-report-initialized-v1')]).then(async ([stored, initialized]) => {
+      const useExample = shouldInitializeExample(stored, initialized);
+      const initial = useExample ? await makeExampleReport() : stored ?? { ...emptyReport(), date: new Date().toLocaleDateString('sv-SE') };
       if (!active) return;
-      const initial = stored ?? { ...emptyReport(), date: new Date().toLocaleDateString('sv-SE') };
+      if (!initialized) { if (useExample) await set(STORAGE_KEY, initial); await set('example-report-initialized-v1', true); }
       lastSaved.current = JSON.stringify(initial); setReport(initial); setReady(true); setStatus('saved');
     }).catch(() => { if (active) { setStatus('error'); toast.error('Não foi possível abrir os dados salvos. Recarregue a página.'); } });
     return () => { active = false; };

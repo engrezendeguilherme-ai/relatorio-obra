@@ -33,3 +33,4 @@ use the editor.
 - Store reports and compressed photo data in IndexedDB through idb-keyval; this app is intentionally local-only and needs no Cloud connection.
 - Keep report models and validation in browser-safe pure modules, with storage in a hook and document generation dynamically loaded from user actions; this preserves SSR safety and keeps export libraries out of initial rendering.
 - Use the index route for the report workspace with three workflow steps; these steps edit the same local document rather than separate content pages.
+- Load the illustrative report once only when local report content is empty, and mark initialization in IndexedDB; this protects existing reports and prevents cleared examples from returning.
