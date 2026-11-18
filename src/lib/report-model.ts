@@ -12,7 +12,8 @@ export interface PlanSheet { id: string; name: string; data: string; width: numb
 export interface PlanMarker { planId: string; x: number; y: number }
 export interface Piece { marker?: PlanMarker | null; id: string; segmentId: string; code: string; name: string; location: string; condition: Condition; quantity: number; notes: string; issues: Issue[]; photos: PiecePhoto[] }
 export interface Logo { data: string; width: number; height: number }
-export interface Report { title: string; client: string; date: string; responsible: string; notes: string; footer: string; logo: Logo | null; plans: PlanSheet[]; segments: Segment[]; pieces: Piece[] }
+export const DEFAULT_APP_NAME = 'Relatórios da estrutura metálica';
+export interface Report { appName: string; title: string; client: string; date: string; responsible: string; notes: string; footer: string; logo: Logo | null; plans: PlanSheet[]; segments: Segment[]; pieces: Piece[] }
 
 export const DEFAULT_SEGMENTS: Segment[] = [
   { id: 'seg-pilares', name: 'Pilares', prefix: 'PL', color: '#2059d2' },
@@ -24,7 +25,7 @@ export const DEFAULT_SEGMENTS: Segment[] = [
   { id: 'seg-calhas', name: 'Calhas', prefix: 'CL', color: '#0e7490' },
   { id: 'seg-outros', name: 'Outros', prefix: 'OU', color: '#4b5563' },
 ];
-export function emptyReport(): Report { return { title: '', client: '', date: '', responsible: '', notes: '', footer: '', logo: null, plans: [], segments: structuredClone(DEFAULT_SEGMENTS), pieces: [] }; }
+export function emptyReport(): Report { return { appName: DEFAULT_APP_NAME, title: '', client: '', date: '', responsible: '', notes: '', footer: '', logo: null, plans: [], segments: structuredClone(DEFAULT_SEGMENTS), pieces: [] }; }
 /** Fills in fields added after the first version so previously saved reports keep working. */
 export function normalizeReport(stored: Partial<Report>): Report {
   const base = emptyReport();

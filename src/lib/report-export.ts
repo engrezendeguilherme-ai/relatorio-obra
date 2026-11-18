@@ -1,5 +1,5 @@
 import { planWithMarkers } from './plan-files';
-import { consolidatedIssues, countSeverity, criticalBySegment, formatDate, groupBySegment, segmentStats, CONDITIONS, SEVERITIES, type Piece, type Report, type ReportFilter, type SegmentGroup } from './report-model';
+import { consolidatedIssues, countSeverity, criticalBySegment, DEFAULT_APP_NAME, formatDate, groupBySegment, segmentStats, CONDITIONS, SEVERITIES, type Piece, type Report, type ReportFilter, type SegmentGroup } from './report-model';
 
 export function filename(report: Report, extension: string) {
   const base = (report.title || 'relatorio-estrutura-metalica').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-|-$/g, '');
@@ -17,7 +17,8 @@ export async function deliverFile(blob: Blob, name: string) {
 }
 type RGB = [number, number, number];
 const rgb = (hex: string): RGB => { const v = hex.replace('#', ''); return [0, 2, 4].map(i => parseInt(v.slice(i, i + 2), 16) || 0) as RGB; };
-const footerText = (report: Report) => report.footer.trim() || report.title || 'Relatórios da estrutura metálica';
+const footerText = (report: Report) => report.footer.trim() || report.title || DEFAULT_APP_NAME;
+const coverName = (report: Report) => (report.appName.trim() || DEFAULT_APP_NAME).toUpperCase();
 export interface TocEntry { kind: 'segment' | 'piece'; label: string; color?: string; code?: string; name?: string; location?: string; condition?: string; issues?: number; page: number }
 
 const TOC_FIRST = 32, TOC_OTHER = 36;
@@ -59,9 +60,9 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
     const h = Math.min(24, 60 * report.logo.height / report.logo.width); const w = h * report.logo.width / report.logo.height;
     pdf.addImage(report.logo.data, 'JPEG', margin, 18, w, h);
     pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10); pdf.setTextColor(...ink);
-    pdf.text('RELATÓRIO DE ESTRUTURA METÁLICA', margin + w + 6, 18 + h / 2 + 1.8);
+    pdf.text(coverName(report), margin + w + 6, 18 + h / 2 + 1.8);
     y = 18 + h + 14;
-  } else { pdf.setDrawColor(...blue); pdf.setLineWidth(1); pdf.line(margin, 22, 42, 22); y = 40; text('RELATÓRIO DE ESTRUTURA METÁLICA', 10, true); }
+  } else { pdf.setDrawColor(...blue); pdf.setLineWidth(1); pdf.line(margin, 22, 42, 22); y = 40; text(coverName(report), 10, true); }
   y += 14;
   text(report.title || 'Relatório de peças', 28, true); y += 14;
   for (const [label, value] of [['Local / cliente', report.client], ['Data', formatDate(report.date)], ['Responsável', report.responsible]] as [string, string][]) { text(label.toUpperCase(), 9, true); text(value || 'Não informado', 12); y += 8; }
@@ -222,9 +223,9 @@ export async function generateWord(report: Report, filter: ReportFilter): Promis
     const h = Math.min(90, 220 * report.logo.height / report.logo.width);
     cover.push(new Table({ width: { size: 9026, type: WidthType.DXA }, columnWidths: [3400, 5626], rows: [new TableRow({ children: [
       new TableCell({ width: { size: 3400, type: WidthType.DXA }, verticalAlign: 'center' as never, children: [new Paragraph({ children: [new d.ImageRun({ type: 'jpg', data: toBytes(report.logo.data), transformation: { width: Math.round(h * report.logo.width / report.logo.height), height: Math.round(h) } })] })] }),
-      new TableCell({ width: { size: 5626, type: WidthType.DXA }, verticalAlign: 'center' as never, children: [new Paragraph({ children: [new TextRun({ text: 'RELATÓRIO DE ESTRUTURA METÁLICA', bold: true })] })] }),
+      new TableCell({ width: { size: 5626, type: WidthType.DXA }, verticalAlign: 'center' as never, children: [new Paragraph({ children: [new TextRun({ text: coverName(report), bold: true })] })] }),
     ] })] }), para(''));
-  } else cover.push(para('RELATÓRIO DE ESTRUTURA METÁLICA', true));
+  } else cover.push(para(coverName(report), true));
   cover.push(new Paragraph({ heading: d.HeadingLevel.TITLE, children: [new TextRun(report.title || 'Relatório de peças')], spacing: { before: 400, after: 400 } }),
     info([['Local / cliente', report.client || 'Não informado'], ['Data', formatDate(report.date)], ['Responsável', report.responsible || 'Não informado'], ['Segmentos', String(groups.length)], ['Total de peças', String(all.length)]]), para(''), para('Observações gerais', true), para(report.notes || 'Nenhuma observação.'));
 
