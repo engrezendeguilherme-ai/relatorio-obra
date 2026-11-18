@@ -304,4 +304,4 @@
 .export-filters label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
 .export-filters input[type=checkbox] { width: 16px; height: 16px; }
 .export-options.three { grid-template-columns: repeat(3, 1fr); }
-@media(max-width:560px) { .issue-row { grid-template-columns: 1fr auto; } .issue-row input { grid-column: 1 / -1; grid-row: 2; } .segment-setting { grid-template-columns: auto 34px 1fr 56px; } .segment-setting .count-badge { display: none; } .export-options.three { grid-template-columns: 1fr; } .toc-piece em:nth-of-type(n+2) { display: none; } }
+@media(max-width:560px) { .issue-row { grid-template-columns: 1fr auto; } .issue-row input { grid-column: 1 / -1; grid-row: 2; } .segment-setting { grid-template-columns: auto 34px 1fr 56px; } .segment-setting .count-badge { display: none; } .export-options.three { grid-template-columns: 1fr; } .toc-piece { flex-wrap: wrap; row-gap: 0; } .toc-piece em { flex: 0 1 auto; font-size: 10px; } }
