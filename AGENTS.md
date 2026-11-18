@@ -36,3 +36,4 @@ use the editor.
 - Load the illustrative report once only when local report content is empty, and mark initialization in IndexedDB; this protects existing reports and prevents cleared examples from returning.
 - Report grouping, stats and issue ordering live in pure functions in `report-model.ts`, shared by preview, PDF, Word and Excel; keeps every output consistent.
 - PDF summary pages are reserved up front and filled after layout; the preview reuses `buildPdf` page numbers so the on-screen summary matches the file.
+- Saved reports are independent snapshots (`saved-reports-v1`) and corrections are keyed by snapshot id (`corrections-v1`) with per-issue status, note and photos; later edits in the workspace never alter a saved report or its corrections.
