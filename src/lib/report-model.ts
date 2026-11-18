@@ -32,7 +32,7 @@ export function normalizeReport(stored: Partial<Report>): Report {
   const segments = stored.segments?.length ? stored.segments : base.segments;
   const fallback = segments.find(s => s.name === 'Outros')?.id ?? segments[segments.length - 1]!.id;
   const plans = stored.plans ?? [];
-  return { ...base, ...stored, segments, plans, pieces: (stored.pieces ?? []).map(p => ({ ...p, marker: p.marker && plans.some(pl => pl.id === p.marker!.planId) ? p.marker : null, segmentId: p.segmentId && segments.some(s => s.id === p.segmentId) ? p.segmentId : fallback, issues: p.issues ?? [] })) };
+  return { ...base, ...stored, appName: stored.appName ?? base.appName, segments, plans, pieces: (stored.pieces ?? []).map(p => ({ ...p, marker: p.marker && plans.some(pl => pl.id === p.marker!.planId) ? p.marker : null, segmentId: p.segmentId && segments.some(s => s.id === p.segmentId) ? p.segmentId : fallback, issues: p.issues ?? [] })) };
 }
 export function shouldInitializeExample(report: Report | undefined, initialized: boolean | undefined): boolean {
   return !initialized && (!report || (!report.title && !report.client && !report.responsible && !report.notes && report.pieces.length === 0));

@@ -18,7 +18,7 @@ export async function deliverFile(blob: Blob, name: string) {
 type RGB = [number, number, number];
 const rgb = (hex: string): RGB => { const v = hex.replace('#', ''); return [0, 2, 4].map(i => parseInt(v.slice(i, i + 2), 16) || 0) as RGB; };
 const footerText = (report: Report) => report.footer.trim() || report.title || DEFAULT_APP_NAME;
-const coverName = (report: Report) => (report.appName.trim() || DEFAULT_APP_NAME).toUpperCase();
+const coverName = (report: Report) => (report.appName?.trim() || DEFAULT_APP_NAME).toUpperCase();
 export interface TocEntry { kind: 'segment' | 'piece'; label: string; color?: string; code?: string; name?: string; location?: string; condition?: string; issues?: number; page: number }
 
 const TOC_FIRST = 32, TOC_OTHER = 36;

@@ -5,7 +5,7 @@ import type { TocEntry } from '@/lib/report-export';
 export function ReportPreview({ report, toc }: { report: Report; toc: TocEntry[] | null }) {
   const groups = groupBySegment(report); const all = groups.flatMap(g => g.pieces);
   const footer = report.footer.trim() || report.title || DEFAULT_APP_NAME;
-  const eyebrow = (report.appName.trim() || DEFAULT_APP_NAME).toUpperCase();
+  const eyebrow = (report.appName?.trim() || DEFAULT_APP_NAME).toUpperCase();
   const pageOf = (kind: 'segment' | 'piece', label: string) => toc?.find(e => e.kind === kind && e.label === label)?.page ?? '…';
   const totals = countSeverity(all); const issues = consolidatedIssues(groups); const critical = criticalBySegment(groups);
   const anchor = (id: string) => `prev-${id}`;
