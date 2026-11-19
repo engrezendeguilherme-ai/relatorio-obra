@@ -259,8 +259,12 @@ export async function generateWord(report: Report, filter: ReportFilter): Promis
         const scale = Math.min(590 / photo.width, 440 / photo.height);
         const w = Math.round(photo.width * scale), h = Math.round(photo.height * scale), dxa = w * 15;
         const line = { style: d.BorderStyle.SINGLE, size: 6, color: 'C6CDD6' };
-        children.push(new Table({ width: { size: dxa, type: WidthType.DXA }, columnWidths: [dxa], alignment: d.AlignmentType.CENTER, rows: [new TableRow({ cantSplit: true, children: [new TableCell({ width: { size: dxa, type: WidthType.DXA }, borders: { top: line, bottom: line, left: line, right: line }, margins: { top: 60, bottom: 60, left: 60, right: 60 }, children: [new Paragraph({ children: [new d.ImageRun({ type: 'jpg', data: toBytes(photo.data), transformation: { width: w, height: h }, altText: { title: piece.code, description: photo.caption || piece.name, name: photo.id } })] })] })] })] }),
-          new Paragraph({ alignment: d.AlignmentType.CENTER, spacing: { before: 80, after: 260 }, children: [new TextRun({ text: figureLabel(figures.get(photo.id)!, photo.caption), bold: true })] }));
+        const off = { style: d.BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+        const noBorder = { top: off, bottom: off, left: off, right: off, insideHorizontal: off, insideVertical: off };
+        children.push(new Table({ width: { size: 9026, type: WidthType.DXA }, columnWidths: [9026], alignment: d.AlignmentType.CENTER, borders: noBorder, rows: [new TableRow({ cantSplit: true, children: [new TableCell({ width: { size: 9026, type: WidthType.DXA }, borders: noBorder, margins: { top: 0, bottom: 160, left: 0, right: 0 }, children: [
+          new Table({ width: { size: dxa, type: WidthType.DXA }, columnWidths: [dxa], alignment: d.AlignmentType.CENTER, borders: noBorder, rows: [new TableRow({ cantSplit: true, children: [new TableCell({ width: { size: dxa, type: WidthType.DXA }, borders: { top: line, bottom: line, left: line, right: line }, margins: { top: 60, bottom: 60, left: 60, right: 60 }, children: [new Paragraph({ spacing: { after: 0 }, children: [new d.ImageRun({ type: 'jpg', data: toBytes(photo.data), transformation: { width: w, height: h }, altText: { title: piece.code, description: photo.caption || piece.name, name: photo.id } })] })] })] })] }),
+          new Paragraph({ alignment: d.AlignmentType.CENTER, spacing: { before: 100, after: 0 }, children: [new TextRun({ text: figureLabel(figures.get(photo.id)!, photo.caption), bold: true })] }),
+        ] })] })] }), para(''));
       }
     }
     sections.push({ properties: page, footers: footer(g.segment.name), children });
