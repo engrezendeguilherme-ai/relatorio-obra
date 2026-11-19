@@ -430,3 +430,10 @@
   .plan-toolbar button { width: 44px; height: 44px; }
   .bottom-strip { display: grid; grid-template-columns: minmax(0,1fr); }
 }
+
+.mobile-quickbar { display: none; }
+@media (max-width: 760px) {
+  .mobile-quickbar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: var(--background); border-top: 1px solid var(--border); box-shadow: 0 -6px 18px color-mix(in oklab, var(--foreground) 10%, transparent); }
+  .mobile-quickbar > button { min-height: 48px; }
+  .workspace { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+}
