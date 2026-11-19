@@ -108,3 +108,12 @@ export async function compressPhoto(file: File, max = MAX_IMAGE_WIDTH): Promise<
 export function piecesOnPlan(pieces: Piece[], planId: string) { return pieces.filter(p => p.marker?.planId === planId).sort((a, b) => naturalCompare(a.code, b.code)); }
 export function removePlan(report: Report, planId: string): Report { return { ...report, plans: report.plans.filter(p => p.id !== planId), pieces: report.pieces.map(p => p.marker?.planId === planId ? { ...p, marker: null } : p) }; }
 export function clampMarker(x: number, y: number) { const c = (v: number) => Math.min(1, Math.max(0, v)); return { x: c(x), y: c(y) }; }
+
+/** Numbers every photo in the order it appears in the report, so the preview, the PDF and the Word agree. */
+export function figureNumbers(pieces: Piece[]) {
+  const numbers = new Map<string, number>();
+  for (const p of pieces) for (const photo of p.photos) numbers.set(photo.id, numbers.size + 1);
+  return numbers;
+}
+export const figureNumber = (n: number) => `Figura ${String(n).padStart(2, '0')}`;
+export const figureLabel = (n: number, caption?: string) => { const text = caption?.trim(); return text ? `${figureNumber(n)}: ${text}` : figureNumber(n); };

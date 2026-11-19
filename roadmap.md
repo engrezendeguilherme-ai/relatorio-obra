@@ -14,3 +14,4 @@
 - [x] Concluir salvamento online privado, migração dos dados locais e verificar acesso em dois aparelhos.
 - [x] Concluir instalação na tela inicial do telefone e ajustar telas de celular (manifesto/ícones verificados; instalação física depende da publicação).
 - [x] Proteger registros com salvamento local imediato, fila offline e sincronização ao reconectar; verificados relatório, foto extra, cópia salva e correção/foto após recarga e leitura em outro acesso.
+- [x] Numerar as fotos como figuras (“Figura 01:” …), com a legenda centralizada e em negrito abaixo da foto e borda fina na foto, na pré-visualização, no PDF e no Word.
