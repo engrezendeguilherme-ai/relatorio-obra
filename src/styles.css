@@ -181,8 +181,11 @@
   textarea { resize: vertical; }
 }
 .app-header { background: var(--surface); border-bottom: 1px solid var(--border); }
-.header-inner { max-width: 1240px; margin: auto; height: 82px; padding: 0 36px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
-.brand { display: flex; gap: 12px; align-items: center; }
+.header-inner { max-width: 1440px; margin: auto; min-height: 82px; padding: 14px 28px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 20px; }
+.brand { display: flex; min-width: 0; gap: 12px; align-items: center; }
+.brand > div:last-child { min-width: 0; }
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.brand-name { overflow-wrap: anywhere; }
 .brand-symbol { width: 42px; height: 44px; border-radius: 9px; background: var(--primary); color: var(--primary-foreground); display: grid; place-items: center; flex-shrink: 0; }
 .brand-symbol svg { width: 24px; height: 24px; }
 .brand-name { font-size: 17px; font-weight: 700; line-height: 1.25; }
@@ -348,8 +351,10 @@
   .correction-head select { width: 100%; }
 }
 @media (max-width: 760px) {
-  .header-inner { height: auto; min-height: 73px; padding-top: 12px; padding-bottom: 12px; flex-wrap: wrap; }
-  .header-inner > .flex { flex-wrap: wrap; gap: 8px; }
+  .header-inner { grid-template-columns: minmax(0,1fr); height: auto; min-height: 73px; padding-top: 12px; padding-bottom: 12px; gap: 12px; }
+  .header-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .header-actions .local-badge { display: none; }
+  .header-actions > button, .header-actions > a { min-width: 0; min-height: 44px; white-space: normal; }
 }
 
 /* Plantas */
@@ -371,3 +376,54 @@
 .plan-item div { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 6px 8px; font-size: 12px; }
 .plan-item div span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .marker-field { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; }
+
+/* Reachable phone controls and readable account screens. */
+.plan-toolbar { display: grid; grid-template-columns: minmax(0,1fr) auto; }
+.plan-toolbar > strong { min-width: 0; overflow-wrap: anywhere; }
+.plan-toolbar select { width: 100%; max-width: 100%; }
+.plan-toolbar > div { flex-shrink: 0; }
+.archive-card h3, .archive-card p, .correction-head h3, .correction-head p { overflow-wrap: anywhere; }
+.correction-head > div, .correction-body > div, .form-grid > *, .strip-content > div { min-width: 0; }
+.strip-icon { flex-shrink: 0; }
+.export-dialog { max-height: 90dvh; overflow-y: auto; }
+@media (min-width: 761px) and (max-width: 1200px) {
+  .header-inner { grid-template-columns: minmax(0,1fr); }
+  .header-actions { flex-wrap: wrap; }
+}
+@media (max-width: 560px) {
+  input, select, textarea { font-size: 16px; }
+  .header-inner { padding-inline: 16px; }
+  .brand-name { max-width: none; font-size: 16px; }
+  .brand-subtitle { font-size: 11px; }
+  .page-heading { display: grid; grid-template-columns: minmax(0,1fr); }
+  .page-heading > div { min-width: 0; }
+  .page-heading h1 { overflow-wrap: anywhere; }
+  .save-status { white-space: normal; font-size: 12px; margin-top: 6px; }
+  .view-toggle { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); width: 100%; }
+  .view-toggle button { min-width: 0; min-height: 44px; white-space: normal; font-size: 11px; padding: 6px; }
+  .view-toggle button:last-child:nth-child(2) { grid-column: span 2; }
+  .search-field { min-width: 0; flex-basis: 100%; }
+  .pieces-toolbar > button { width: 100%; }
+  .segment-chip { min-height: 44px; }
+  .row-controls button { width: 44px; height: 44px; }
+  .section-actions { display: grid; grid-template-columns: minmax(0,1fr); }
+  .section-actions > button { min-height: 44px; white-space: normal; }
+  .photo-editor-grid { grid-template-columns: minmax(0,1fr); }
+  .photo-editor > img { height: 200px; }
+  .photo-controls { flex-wrap: nowrap; }
+  .photo-controls span { width: auto; flex: 1; }
+  .photo-controls button { height: 44px; width: 44px; }
+  .report-paper { padding: 18px; }
+  .cover-brand .paper-logo { max-width: 40%; }
+  .export-dialog { width: calc(100% - 24px); padding: 20px; }
+  .archive-card, .correction-card { padding: 16px; border-radius: 8px; }
+  .archive-actions { display: grid; grid-template-columns: minmax(0,1fr) auto; }
+  .archive-actions > a { grid-column: 1 / -1; white-space: normal; }
+  .archive-actions > button, .archive-actions > a { min-height: 44px; }
+  .correction-stats { gap: 8px; }
+  .correction-stats > div { padding: 12px; border-radius: 8px; }
+  .plan-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .plan-toolbar { gap: 6px; padding-inline: 8px; }
+  .plan-toolbar button { width: 44px; height: 44px; }
+  .bottom-strip { display: grid; grid-template-columns: minmax(0,1fr); }
+}

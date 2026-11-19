@@ -25,10 +25,10 @@ function CorrectionPage() {
   const [busy, setBusy] = useState(false);
   const loaded = useRef(false);
   useEffect(() => { if (ready && !loaded.current) { loaded.current = true; setC(corrections[id] ?? { ...emptyCorrection(id), date: new Date().toLocaleDateString('sv-SE') }); } }, [ready, corrections, id]);
-  useEffect(() => { if (c && loaded.current) { const t = setTimeout(() => void saveCorrection(c), 300); return () => clearTimeout(t); } return undefined; }, [c, saveCorrection]);
+  useEffect(() => { if (c && loaded.current) { const t = setTimeout(() => void saveCorrection(c).catch(() => {}), 300); return () => clearTimeout(t); } return undefined; }, [c, saveCorrection]);
   const header = <header className="app-header"><div className="header-inner"><div className="brand"><div className="brand-symbol"><Boxes strokeWidth={1.7} /></div><div><div className="brand-name">Relatórios da estrutura metálica</div><div className="brand-subtitle">Registro de correções</div></div></div><Button asChild variant="outline" size="sm"><Link to="/relatorios"><ArrowLeft />Relatórios salvos</Link></Button></div></header>;
   if (!ready || !c) return <>{header}<main className="workspace"><Loader2 className="animate-spin" /></main></>;
-  if (!saved) return <>{header}<main className="workspace"><h1 className="text-2xl font-bold">Relatório não encontrado</h1><p className="mt-2 text-muted-foreground">Ele pode ter sido excluído deste aparelho.</p></main></>;
+  if (!saved) return <>{header}<main className="workspace"><h1 className="text-2xl font-bold">Relatório não encontrado</h1><p className="mt-2 text-muted-foreground">Ele pode ter sido excluído da sua conta.</p></main></>;
   const report = saved.report;
   const rows = correctionRows(report, c); const st = correctionStats(rows);
   const setItem = (issueId: string, patch: Partial<CorrectionItem>) => setC(prev => prev && ({ ...prev, items: { ...prev.items, [issueId]: { ...itemOf(prev, issueId), ...patch } } }));
@@ -38,8 +38,9 @@ function CorrectionPage() {
     catch { toast.error('Não foi possível abrir a imagem. Use JPG, PNG ou WebP.'); }
   }
   async function exportPdf() {
+    if (!c) return;
     setBusy(true);
-    try { const [{ generateCorrectionPdf }, { deliverFile, filename }] = await Promise.all([import('@/lib/correction-export'), import('@/lib/report-export')]); const blob = await generateCorrectionPdf(report, c!); await deliverFile(blob, filename(report, 'pdf').replace(/\.pdf$/, '-correcoes.pdf')); }
+    try { const [{ generateCorrectionPdf }, { deliverFile, filename }] = await Promise.all([import('@/lib/correction-export'), import('@/lib/report-export')]); const blob = await generateCorrectionPdf(report, c); await deliverFile(blob, filename(report, 'pdf').replace(/\.pdf$/, '-correcoes.pdf')); }
     catch (e) { console.error(e); toast.error('Não foi possível gerar o PDF. Tente novamente.'); }
     finally { setBusy(false); }
   }

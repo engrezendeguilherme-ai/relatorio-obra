@@ -11,5 +11,5 @@
 - [x] Plantas do projeto (PDF/imagem) com marcação das peças, visão "Na planta" e planta no PDF/Word.
 - [ ] Modelo 3D (IFC) — próxima etapa, aguardando confirmação do usuário.
 - [x] Alinhar "Relatório de estrutura metálica" ao lado da logo na capa (pré-visualização, PDF e Word).
-- [ ] Concluir salvamento online privado, migração dos dados locais e verificar acesso em dois aparelhos.
-- [ ] Concluir instalação na tela inicial do telefone e ajustar telas de celular.
+- [x] Concluir salvamento online privado, migração dos dados locais e verificar acesso em dois aparelhos.
+- [x] Concluir instalação na tela inicial do telefone e ajustar telas de celular (manifesto/ícones verificados; instalação física depende da publicação).
