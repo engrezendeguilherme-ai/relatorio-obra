@@ -31,8 +31,8 @@ export function useReport() {
     queue.current = queue.current.catch(() => {}).then(async () => {
       try {
         await set(STORAGE_KEY, report); lastSaved.current = serialized; setStatus('saved');
-        if (!notified.current) { toast.success('Alterações salvas neste navegador'); notified.current = true; }
-      } catch { setStatus('error'); toast.error('Não foi possível salvar. Libere espaço no dispositivo e tente novamente.'); }
+        if (!notified.current) { toast.success('Alterações salvas na sua conta'); notified.current = true; }
+      } catch { setStatus('error'); toast.error('Não foi possível salvar online. Verifique sua conexão e tente novamente.'); }
     });
   }, [report, ready]);
   return { report, setReport, ready, status };
