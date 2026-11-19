@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const state = vi.hoisted(() => ({ local: new Map<string, unknown>(), online: new Map<string, unknown>(), user: 'owner', writes: [] as string[], fail: false }));
+const state = vi.hoisted(() => ({ local: new Map<string, unknown>(), online: new Map<string, unknown>(), user: 'owner', writes: [] as string[], fail: false, files: new Map<string, unknown>() }));
 vi.mock('idb-keyval', () => ({ get: async (k: string) => state.local.get(k), set: async (k: string, v: unknown) => { state.local.set(k, v); }, keys: async () => [...state.local.keys()], update: async (k: string, fn: (v: unknown) => unknown) => { state.local.set(k, fn(state.local.get(k))); } }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {
   auth: { getSession: async () => ({ data: { session: state.user ? { user: { id: state.user } } : null } }) },
+  storage: { from: () => ({ upload: async (path: string, blob: unknown) => { if (state.fail) return { error: new Error('Network failed') }; state.files.set(path, blob); return { error: null }; } }) },
   from: () => {
     let user = '', key = '';
     const query = {
@@ -24,7 +25,7 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: {
 } }));
 
 describe('Private online report storage', () => {
-  beforeEach(() => { vi.resetModules(); state.local.clear(); state.online.clear(); state.writes = []; state.user = 'owner'; state.fail = false; });
+  beforeEach(() => { vi.resetModules(); state.local.clear(); state.online.clear(); state.writes = []; state.files.clear(); state.user = 'owner'; state.fail = false; });
   it('migrates report, saved reports and corrections together without deleting local originals', async () => {
     state.local.set('peca-a-peca-report-v1', { title: 'Vistoria' });
     state.local.set('saved-reports-v1', [{ id: 'saved-1' }]);
@@ -70,6 +71,19 @@ describe('Private online report storage', () => {
     await store.syncPending();
     expect(state.online.get('owner:peca-a-peca-report-v1')).toEqual({ title: 'Última edição', photos: ['foto-1', 'foto-2'] });
     expect(state.local.get('offline-record:owner:peca-a-peca-report-v1')).toMatchObject({ pending: false });
+  });
+  it('sends each photo separately and keeps only a short reference in the online record', async () => {
+    const photo = 'data:image/jpeg;base64,' + 'A'.repeat(4000);
+    vi.stubGlobal('fetch', async () => ({ blob: async () => new Blob(['x'], { type: 'image/jpeg' }) }));
+    const store = await import('@/lib/cloud-store');
+    await store.set('peca-a-peca-report-v1', { pieces: [{ photos: [{ id: 'f1', data: photo }, { id: 'f2', data: photo }] }] });
+    await store.syncPending();
+    expect(state.files.size).toBe(1);
+    const online = JSON.stringify(state.online.get('owner:peca-a-peca-report-v1'));
+    expect(online).not.toContain('base64');
+    expect(online).toContain('photo-ref:');
+    expect(state.local.get('offline-record:owner:peca-a-peca-report-v1')).toMatchObject({ pending: false, value: { pieces: [{ photos: [{ data: photo }, { data: photo }] }] } });
+    vi.unstubAllGlobals();
   });
   it('reads cached reports during a failed network read rather than initializing an empty document', async () => {
     state.local.set('cloud-cache:owner:saved-reports-v1', [{ id: 'protected' }]);

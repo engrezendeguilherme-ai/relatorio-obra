@@ -1,4 +1,4 @@
-export const MAX_IMAGE_WIDTH = 1600;
+export const MAX_IMAGE_WIDTH = 1280;
 export const IMAGE_QUALITY = 0.8;
 export const CONDITIONS = ['Boa', 'Regular', 'Ruim', 'Danificada'] as const;
 export type Condition = (typeof CONDITIONS)[number];
