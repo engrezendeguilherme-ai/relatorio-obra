@@ -181,6 +181,9 @@
   textarea { resize: vertical; }
 }
 .app-header { background: var(--surface); border-bottom: 1px solid var(--border); }
+.sync-status { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 38px; padding: 6px 16px; background: var(--success-soft); color: var(--success); border-bottom: 1px solid var(--border); font-size: 12px; }
+.sync-status span { min-width: 0; }
+.sync-status > svg, .sync-status > button { flex-shrink: 0; }
 .header-inner { max-width: 1440px; margin: auto; min-height: 82px; padding: 14px 28px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 20px; }
 .brand { display: flex; min-width: 0; gap: 12px; align-items: center; }
 .brand > div:last-child { min-width: 0; }

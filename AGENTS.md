@@ -30,7 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Application architecture
-- Store reports, compressed images and corrections in Cloud user_data under the authenticated user; IndexedDB is an account-scoped cache and a one-time legacy migration source, so accounts never import another account's cache.
+- Persist every report, photo and correction to an account-scoped IndexedDB record before network access; revisioned pending records sync to Cloud user_data on reconnect, focus and periodic retries, so network failure never blocks durable local saves or overwrites pending edits.
 - Keep report models and validation in browser-safe pure modules, with storage in a hook and document generation dynamically loaded from user actions; this preserves SSR safety and keeps export libraries out of initial rendering.
 - Use the index route for the report workspace with three workflow steps; these steps edit the same local document rather than separate content pages.
 - Load the illustrative report once only when local report content is empty, and mark initialization in IndexedDB; this protects existing reports and prevents cleared examples from returning.
@@ -38,4 +38,4 @@ use the editor.
 - PDF summary pages are reserved up front and filled after layout; the preview reuses `buildPdf` page numbers so the on-screen summary matches the file.
 - Saved reports are independent snapshots (`saved-reports-v1`) and corrections are keyed by snapshot id (`corrections-v1`) with per-issue status, note and photos; later edits in the workspace never alter a saved report or its corrections.
 - Project plans are stored on the report as JPEG sheets (PDF pages rendered with pdfjs-dist) and pieces keep an optional marker with fractional x/y; outputs draw markers onto the sheet so PDF, Word and screen match at any size.
-- Keep home-screen installation manifest-only without an app-shell service worker; online account storage requires connectivity and previews must remain uncached.
+- Keep installation manifest-only without an app-shell service worker; offline edits use IndexedDB in an already opened app, while a fully offline cold launch is not supported and previews remain uncached.

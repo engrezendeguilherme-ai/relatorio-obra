@@ -25,7 +25,7 @@ function CorrectionPage() {
   const [busy, setBusy] = useState(false);
   const loaded = useRef(false);
   useEffect(() => { if (ready && !loaded.current) { loaded.current = true; setC(corrections[id] ?? { ...emptyCorrection(id), date: new Date().toLocaleDateString('sv-SE') }); } }, [ready, corrections, id]);
-  useEffect(() => { if (c && loaded.current) { const t = setTimeout(() => void saveCorrection(c).catch(() => {}), 300); return () => clearTimeout(t); } return undefined; }, [c, saveCorrection]);
+  useEffect(() => { if (c && loaded.current) void saveCorrection(c).catch(() => {}); }, [c, saveCorrection]);
   const header = <header className="app-header"><div className="header-inner"><div className="brand"><div className="brand-symbol"><Boxes strokeWidth={1.7} /></div><div><div className="brand-name">Relatórios da estrutura metálica</div><div className="brand-subtitle">Registro de correções</div></div></div><Button asChild variant="outline" size="sm"><Link to="/relatorios"><ArrowLeft />Relatórios salvos</Link></Button></div></header>;
   if (!ready || !c) return <>{header}<main className="workspace"><Loader2 className="animate-spin" /></main></>;
   if (!saved) return <>{header}<main className="workspace"><h1 className="text-2xl font-bold">Relatório não encontrado</h1><p className="mt-2 text-muted-foreground">Ele pode ter sido excluído da sua conta.</p></main></>;

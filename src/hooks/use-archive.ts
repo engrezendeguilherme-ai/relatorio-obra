@@ -14,7 +14,7 @@ export function useArchive() {
     ref.current = next; setCorrections(next);
     const pending = queue.current.catch(() => {}).then(() => set(CORRECTIONS_KEY, next));
     queue.current = pending;
-    try { await pending; } catch (error) { toast.error('Não foi possível salvar online. Verifique sua conexão.'); throw error; }
+    try { await pending; } catch (error) { toast.error('Não foi possível salvar no aparelho. Não feche a página e verifique o espaço disponível.'); throw error; }
   };
   useEffect(() => {
     Promise.all([get<SavedReport[]>(REPORTS_KEY), get<Record<string, Correction>>(CORRECTIONS_KEY)])
@@ -23,7 +23,7 @@ export function useArchive() {
   }, []);
   const saveReports = useCallback(async (next: SavedReport[]) => {
     setReports(next);
-    try { await set(REPORTS_KEY, next); } catch (error) { toast.error('Não foi possível salvar online. Verifique sua conexão.'); throw error; }
+    try { await set(REPORTS_KEY, next); } catch (error) { toast.error('Não foi possível salvar no aparelho. Verifique o espaço disponível.'); throw error; }
   }, []);
   const saveCorrection = useCallback((c: Correction) => write({ ...ref.current, [c.reportId]: c }), []);
   const removeCorrection = useCallback((id: string) => { const next = { ...ref.current }; delete next[id]; return write(next); }, []);

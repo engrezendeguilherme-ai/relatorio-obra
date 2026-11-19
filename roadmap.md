@@ -13,3 +13,4 @@
 - [x] Alinhar "Relatório de estrutura metálica" ao lado da logo na capa (pré-visualização, PDF e Word).
 - [x] Concluir salvamento online privado, migração dos dados locais e verificar acesso em dois aparelhos.
 - [x] Concluir instalação na tela inicial do telefone e ajustar telas de celular (manifesto/ícones verificados; instalação física depende da publicação).
+- [x] Proteger registros com salvamento local imediato, fila offline e sincronização ao reconectar; verificados relatório, foto extra, cópia salva e correção/foto após recarga e leitura em outro acesso.

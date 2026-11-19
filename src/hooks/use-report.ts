@@ -14,7 +14,7 @@ export function useReport() {
   const notified = useRef(false);
   useEffect(() => {
     let active = true;
-    Promise.all([get<Report>(STORAGE_KEY), get<boolean>('example-report-initialized-v1')]).then(async ([stored, initialized]) => {
+    Promise.all([get<Report>(STORAGE_KEY), get<boolean>('example-report-initialized-v1'), get('saved-reports-v1'), get('corrections-v1')]).then(async ([stored, initialized]) => {
       const useExample = shouldInitializeExample(stored, initialized);
       const initial = useExample ? await makeExampleReport() : stored ? normalizeReport(stored) : { ...emptyReport(), date: new Date().toLocaleDateString('sv-SE') };
       if (!active) return;
@@ -31,8 +31,8 @@ export function useReport() {
     queue.current = queue.current.catch(() => {}).then(async () => {
       try {
         await set(STORAGE_KEY, report); lastSaved.current = serialized; setStatus('saved');
-        if (!notified.current) { toast.success('Alterações salvas na sua conta'); notified.current = true; }
-      } catch { setStatus('error'); toast.error('Não foi possível salvar online. Verifique sua conexão e tente novamente.'); }
+        if (!notified.current) { toast.success('Alterações protegidas neste aparelho'); notified.current = true; }
+      } catch { setStatus('error'); toast.error('Não foi possível salvar no aparelho. Não feche a página; exporte uma cópia e verifique o espaço disponível.'); }
     });
   }, [report, ready]);
   return { report, setReport, ready, status };
