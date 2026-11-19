@@ -364,7 +364,7 @@
 .plan-board { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); overflow: hidden; }
 .plan-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
 .plan-toolbar select { width: auto; max-width: 60%; }
-.plan-scroll { overflow: auto; max-height: 70vh; background: var(--muted); }
+.plan-scroll { overflow: auto; max-height: 70vh; background: var(--muted); touch-action: pan-x pan-y; }
 .plan-sheet { position: relative; min-width: 100%; }
 .plan-sheet img { display: block; width: 100%; height: auto; user-select: none; }
 .plan-sheet.placing { cursor: crosshair; }
