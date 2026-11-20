@@ -9,7 +9,7 @@ describe('Regras das peças e fotos', () => {
   it('aceita apenas quantidades inteiras positivas', () => { expect(validatePiece({ ...piece, quantity: 0 })).toBe('A quantidade deve ser um número inteiro maior que zero.'); expect(validatePiece({ ...piece, quantity: 1.5 })).not.toBeNull(); expect(validatePiece({ ...piece, quantity: 2 })).toBeNull(); });
   it('limita a largura a 1280px mantendo proporção', () => { expect(MAX_IMAGE_WIDTH).toBe(1280); expect(imageDimensions(4000, 3000)).toEqual({ width: 1280, height: 960 }); expect(imageDimensions(800, 600)).toEqual({ width: 800, height: 600 }); });
   it('comprime com qualidade 0.8', () => { expect(IMAGE_QUALITY).toBe(0.8); });
-  it('oferece as quatro condições solicitadas', () => { expect(CONDITIONS).toEqual(['Boa', 'Regular', 'Ruim', 'Danificada']); });
+  it('oferece as quatro condições solicitadas', () => { expect(CONDITIONS).toEqual(['Aprovado', 'Aprovado com ressalvas', 'Refazer', 'Substituir']); });
   it('reordena preservando todas as peças e fotos', () => { expect(moveItem(['a', 'b', 'c'], 0, 2)).toEqual(['b', 'c', 'a']); });
 });
 describe('Segmentos', () => {
@@ -58,4 +58,12 @@ describe('Numeração das figuras', () => {
     expect(figureLabel(12, 'X')).toBe('Figura 12: X');
     expect(figureLabel(1, '  solda  ')).toBe('Figura 01: solda');
   });
+});
+
+import { decisionOptions, validateDecisions } from '@/lib/inspection-settings';
+describe('Gerenciamento das avaliações', () => {
+  it('oferece Aprovado e Refazer para novas peças', () => { expect(CONDITIONS).toContain('Aprovado'); expect(CONDITIONS).toContain('Refazer'); });
+  it('preserva a condição histórica sem aprovação automática', () => { expect(normalizeReport({ pieces: [piece] }).pieces[0]?.condition).toBe('Boa'); expect(decisionOptions(['Refazer'], 'Boa')).toEqual(['Boa', 'Refazer']); });
+  it('contabiliza opções personalizadas e antigas sem perder peças', () => { expect(segmentStats([piece, { ...piece, condition: 'Refazer' }, { ...piece, condition: 'Inspecionar' }]).conditions).toEqual({ Boa: 1, Refazer: 1, Inspecionar: 1 }); });
+  it('rejeita opções vazias e duplicadas', () => { expect(validateDecisions([])).not.toBeNull(); expect(validateDecisions([''])).not.toBeNull(); expect(validateDecisions(['Refazer', ' refazer '])).not.toBeNull(); expect(validateDecisions(['Aprovado', 'Refazer'])).toBeNull(); });
 });

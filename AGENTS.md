@@ -41,3 +41,5 @@ use the editor.
 - Project plans are stored on the report as JPEG sheets (PDF pages rendered with pdfjs-dist) and pieces keep an optional marker with fractional x/y; outputs draw markers onto the sheet so PDF, Word and screen match at any size.
 - Keep installation manifest-only without an app-shell service worker; offline edits use IndexedDB in an already opened app, while a fully offline cold launch is not supported and previews remain uncached.
 - Images inside synced records are uploaded one by one to the private `photos` bucket by content hash and replaced with `photo-ref:` references online, then rehydrated and cached locally; keeps records small so slow connections never block saving.
+
+- Inspection decision options are account-scoped settings in the existing offline-first store; historical piece values and archived snapshots are never relabeled automatically, and summaries count the actual stored labels.

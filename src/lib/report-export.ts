@@ -1,5 +1,5 @@
 import { planWithMarkers } from './plan-files';
-import { consolidatedIssues, countSeverity, criticalBySegment, DEFAULT_APP_NAME, figureLabel, figureNumbers, formatDate, groupBySegment, segmentStats, CONDITIONS, SEVERITIES, type Piece, type Report, type ReportFilter, type SegmentGroup } from './report-model';
+import { consolidatedIssues, countSeverity, criticalBySegment, DEFAULT_APP_NAME, figureLabel, figureNumbers, formatDate, groupBySegment, segmentStats, SEVERITIES, type Piece, type Report, type ReportFilter, type SegmentGroup } from './report-model';
 
 export function filename(report: Report, extension: string) {
   const base = (report.title || 'relatorio-estrutura-metalica').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-|-$/g, '');
@@ -101,7 +101,7 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
     pdf.setFont('helvetica', 'bold'); pdf.setFontSize(16); pdf.setTextColor(255, 255, 255); pdf.text(g.segment.name.toUpperCase(), margin + 5, y + 5.2);
     pdf.setFontSize(9); pdf.text(`Prefixo ${g.segment.prefix}`, margin + width - 5, y + 5, { align: 'right' }); y += 19;
     const s = segmentStats(g.pieces);
-    const boxes: [string, string][] = [['Peças', String(s.pieces)], ['Unidades', String(s.units)], ...CONDITIONS.map(k => [k, String(s.conditions[k])] as [string, string]), ...SEVERITIES.map(k => [`Apont. ${k.toLowerCase()}`, String(s.severities[k])] as [string, string])];
+    const boxes: [string, string][] = [['Peças', String(s.pieces)], ['Unidades', String(s.units)], ...Object.entries(s.conditions).map(([k, v]) => [k, String(v)] as [string, string]), ...SEVERITIES.map(k => [`Apont. ${k.toLowerCase()}`, String(s.severities[k])] as [string, string])];
     const bw = width / 3;
     boxes.forEach(([label, value], i) => {
       const x = margin + (i % 3) * bw, by = y + Math.floor(i / 3) * 15;
@@ -118,7 +118,7 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
     toc.push({ kind: 'piece', label: piece.code, code: piece.code, name: piece.name, location: piece.location, condition: piece.condition, issues: piece.issues.length, page: pdf.getNumberOfPages() });
     pdf.setFillColor(...color); pdf.rect(margin, y - 4.5, 1.6, 7, 'F');
     text(`${piece.code} — ${piece.name || 'Peça sem descrição'}`, 15, true, margin + 4, width - 4); y += 3;
-    for (const [label, value] of [['Localização / setor', piece.location || 'Não informado'], ['Condição', piece.condition], ['Quantidade', String(piece.quantity)], ...(piece.marker ? [['Planta', report.plans.find(x => x.id === piece.marker!.planId)?.name ?? '—']] : [])] as [string, string][]) {
+    for (const [label, value] of [['Localização / setor', piece.location || 'Não informado'], ['Avaliação', piece.condition], ['Quantidade', String(piece.quantity)], ...(piece.marker ? [['Planta', report.plans.find(x => x.id === piece.marker!.planId)?.name ?? '—']] : [])] as [string, string][]) {
       ensure(12);
       const lines = pdf.splitTextToSize(value, 110) as string[]; const rowHeight = Math.max(9, lines.length * 5 + 4);
       pdf.setFillColor(245, 247, 250); pdf.rect(margin, y - 4.5, width, rowHeight, 'F');
@@ -184,7 +184,7 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
     } else {
       pdf.setFont('helvetica', 'normal'); pdf.setTextColor(...ink);
       const cut = (s: string | undefined, w: number) => (pdf.splitTextToSize(s || '—', w) as string[])[0] ?? '';
-      pdf.text(cut(e.code!, 22), margin + 5, y); pdf.text(cut(e.name!, 52), margin + 29, y); pdf.text(cut(e.location!, 40), margin + 83, y); pdf.text(e.condition ?? '', margin + 125, y); pdf.setTextColor(...muted); pdf.text(`${e.issues} apont.`, margin + 145, y);
+      pdf.text(cut(e.code!, 22), margin + 5, y); pdf.text(cut(e.name!, 52), margin + 29, y); pdf.text(cut(e.location!, 40), margin + 83, y); pdf.text(cut(e.condition, 22), margin + 125, y); pdf.setTextColor(...muted); pdf.text(`${e.issues} apont.`, margin + 145, y);
     }
     pdf.setTextColor(...ink); pdf.text(String(e.page), margin + width, y, { align: 'right' });
     pdf.link(margin, y - 4, width, 5.5, { pageNumber: e.page });
@@ -247,12 +247,12 @@ export async function generateWord(report: Report, filter: ReportFilter): Promis
     const color = g.segment.color.replace('#', '').toUpperCase(); const s = segmentStats(g.pieces);
     const children: (InstanceType<typeof Paragraph> | InstanceType<typeof Table>)[] = [
       new Paragraph({ shading: { type: ShadingType.CLEAR, fill: color }, spacing: { after: 240 }, children: [new d.Bookmark({ id: bm(`s_${g.segment.id}`), children: [new TextRun({ text: `  ${g.segment.name.toUpperCase()}`, bold: true, color: 'FFFFFF', size: 34 })] })] }),
-      grid(['Peças', 'Unidades', ...CONDITIONS], [1290, 1290, 1290, 1289, 1289, 1289, 1289], [[String(s.pieces), String(s.units), ...CONDITIONS.map(c => String(s.conditions[c]))]]), para(''),
+      info([['Peças', String(s.pieces)], ['Unidades', String(s.units)], ...Object.entries(s.conditions).map(([label, value]) => [label, String(value)] as [string, string])]), para(''),
       grid(SEVERITIES.map(v => `Apontamentos ${v.toLowerCase()}`), [3009, 3009, 3008], [SEVERITIES.map(v => String(s.severities[v]))]), para(''),
     ];
     for (const piece of g.pieces) {
       children.push(new Paragraph({ heading: d.HeadingLevel.HEADING_2, keepNext: true, border: { left: { style: d.BorderStyle.SINGLE, size: 24, color, space: 6 } }, children: [new d.Bookmark({ id: bm(`p_${piece.id}`), children: [new TextRun(`${piece.code} — ${piece.name || 'Peça sem descrição'}`)] })] }),
-        info([['Localização / setor', piece.location || 'Não informado'], ['Condição', piece.condition], ['Quantidade', String(piece.quantity)], ...(piece.marker ? [['Planta', report.plans.find(x => x.id === piece.marker!.planId)?.name ?? '—']] : []) as [string, string][]]));
+        info([['Localização / setor', piece.location || 'Não informado'], ['Avaliação', piece.condition], ['Quantidade', String(piece.quantity)], ...(piece.marker ? [['Planta', report.plans.find(x => x.id === piece.marker!.planId)?.name ?? '—']] : []) as [string, string][]]));
       if (piece.notes) children.push(para(''), para('Observações', true), para(piece.notes));
       if (piece.issues.length) { children.push(para(''), para('Apontamentos', true)); for (const i of piece.issues) children.push(new Paragraph({ children: [new TextRun({ text: `${i.severity.toUpperCase()}  `, bold: true, color: i.severity === 'Crítico' ? 'BE123C' : i.severity === 'Moderado' ? 'C2410C' : 'B7791F' }), new TextRun(i.description)] })); }
       for (const photo of piece.photos) {
@@ -289,11 +289,11 @@ export async function generateExcel(report: Report, filter: ReportFilter): Promi
   const { default: writeXlsxFile } = await import('write-excel-file/browser');
   const groups: SegmentGroup[] = groupBySegment(report, filter);
   const head = (labels: string[]) => labels.map(value => ({ value, fontWeight: 'bold' as const, backgroundColor: '#E8EDF5' }));
-  const pieces = [head(['Segmento', 'Código', 'Nome / descrição', 'Localização / setor', 'Condição', 'Quantidade', 'Fotos', 'Apontamentos', 'Leves', 'Moderados', 'Críticos', 'Observações']),
+  const pieces = [head(['Segmento', 'Código', 'Nome / descrição', 'Localização / setor', 'Avaliação', 'Quantidade', 'Fotos', 'Apontamentos', 'Leves', 'Moderados', 'Críticos', 'Observações']),
     ...groups.flatMap(g => g.pieces.map(p => { const s = countSeverity([p]); return [g.segment.name, p.code, p.name, p.location, p.condition, p.quantity, p.photos.length, p.issues.length, s.Leve, s.Moderado, s['Crítico'], p.notes].map(value => ({ value })); }))];
   const issues = [head(['Gravidade', 'Segmento', 'Código', 'Peça', 'Setor', 'Descrição']), ...consolidatedIssues(groups).map(r => [r.severity, r.segment, r.code, r.name, r.location, r.description].map(value => ({ value })))];
   return writeXlsxFile([
-    { sheet: 'Peças', data: pieces, columns: [18, 12, 30, 24, 12, 11, 8, 13, 8, 11, 9, 50].map(width => ({ width })) },
+    { sheet: 'Peças', data: pieces, columns: [18, 12, 30, 24, 28, 11, 8, 13, 8, 11, 9, 50].map(width => ({ width })) },
     { sheet: 'Apontamentos', data: issues, columns: [12, 18, 12, 30, 24, 60].map(width => ({ width })) },
   ]).toBlob();
 }

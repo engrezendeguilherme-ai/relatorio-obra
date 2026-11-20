@@ -3,11 +3,12 @@ import { AlertTriangle, ArrowDown, ArrowUp, Camera, GripVertical, ImagePlus, Loa
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { compressPhoto, CONDITIONS, isDuplicateCode, moveItem, nextCode, SEVERITIES, validatePiece, type Piece, type PiecePhoto, type PlanSheet, type Segment, type Severity } from '@/lib/report-model';
+import { compressPhoto, isDuplicateCode, moveItem, nextCode, SEVERITIES, validatePiece, type Piece, type PiecePhoto, type PlanSheet, type Segment, type Severity } from '@/lib/report-model';
+import { decisionOptions, DEFAULT_DECISIONS } from '@/lib/inspection-settings';
 import { PlanBoard } from '@/components/plan-board';
 
-export function PieceEditor({ initial, segments, pieces, plans = [], onSave, onClose }: { initial: Piece; segments: Segment[]; pieces: Piece[]; plans?: PlanSheet[]; onSave: (piece: Piece) => void; onClose: () => void }) {
-  const [piece, setPiece] = useState(() => { const seg = segments.find(s => s.id === initial.segmentId); return !initial.code && seg ? { ...initial, code: nextCode(seg.prefix, pieces, initial.id) } : initial; });
+export function PieceEditor({ initial, segments, pieces, plans = [], decisions = DEFAULT_DECISIONS, onSave, onClose }: { initial: Piece; segments: Segment[]; pieces: Piece[]; plans?: PlanSheet[]; decisions?: string[]; onSave: (piece: Piece) => void; onClose: () => void }) {
+  const [piece, setPiece] = useState(() => { initial = initial.code ? initial : { ...initial, condition: decisions[0] ?? 'Aprovado' }; const seg = segments.find(s => s.id === initial.segmentId); return !initial.code && seg ? { ...initial, code: nextCode(seg.prefix, pieces, initial.id) } : initial; });
   const suggested = useRef(initial.code ? '' : piece.code);
   const duplicate = isDuplicateCode(piece.code, pieces, piece.id);
   function chooseSegment(segmentId: string) {
@@ -38,7 +39,7 @@ export function PieceEditor({ initial, segments, pieces, plans = [], onSave, onC
         <label className="field">Segmento <span className="required">*</span><select autoFocus value={piece.segmentId} onChange={e => chooseSegment(e.target.value)} aria-required="true"><option value="" disabled>Escolha o segmento</option>{segments.map(s => <option key={s.id} value={s.id}>{s.name} ({s.prefix})</option>)}</select></label>
         <label className="field">Código / número da peça <span className="required">*</span><input value={piece.code} onChange={e => field('code', e.target.value)} placeholder="Ex.: PL-001" aria-required="true" aria-invalid={duplicate} />{duplicate && <span className="field-warning"><AlertTriangle size={13} />Já existe uma peça com este código.</span>}</label>
         <label className="field">Localização / setor<input value={piece.location} onChange={e => field('location', e.target.value)} placeholder="Ex.: Galpão A" /></label>
-        <div className="form-grid compact"><label className="field">Condição<select value={piece.condition} onChange={e => field('condition', e.target.value)}>{CONDITIONS.map(c => <option key={c}>{c}</option>)}</select></label><label className="field">Quantidade<input type="number" min={1} step={1} value={piece.quantity} onChange={e => field('quantity', Number(e.target.value))} /></label></div>
+        <div className="form-grid compact"><label className="field">Avaliação<select value={piece.condition} onChange={e => field('condition', e.target.value)}>{decisionOptions(decisions, piece.condition).map(c => <option key={c}>{c}</option>)}</select></label><label className="field">Quantidade<input type="number" min={1} step={1} value={piece.quantity} onChange={e => field('quantity', Number(e.target.value))} /></label></div>
         <label className="field">Nome / descrição<input value={piece.name} onChange={e => field('name', e.target.value)} placeholder="Ex.: Pilar metálico" /></label>
         <label className="field full">Observações<textarea rows={2} value={piece.notes} onChange={e => field('notes', e.target.value)} placeholder="Detalhes sobre esta peça..." /></label>
       </div>

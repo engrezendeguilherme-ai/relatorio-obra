@@ -1,4 +1,6 @@
 # Relatórios de peças
+- [x] Trocar as condições de novas peças por decisões de inspeção e preservar avaliações antigas.
+- [x] Criar gerenciamento privado das opções, com salvamento offline e online; verificar no celular.
 - [x] Preencher exemplo com três peças e fotos sem substituir registros existentes; verificar pré-visualização e exportação.
 - [x] Aplicar o nome “Relatórios da estrutura metálica”.
 - [x] Criar telas de dados, peças e pré-visualização em português.

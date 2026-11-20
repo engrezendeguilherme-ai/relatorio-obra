@@ -1,7 +1,8 @@
 export const MAX_IMAGE_WIDTH = 1280;
 export const IMAGE_QUALITY = 0.8;
-export const CONDITIONS = ['Boa', 'Regular', 'Ruim', 'Danificada'] as const;
-export type Condition = (typeof CONDITIONS)[number];
+import { DEFAULT_DECISIONS } from './inspection-settings';
+export const CONDITIONS = DEFAULT_DECISIONS;
+export type Condition = string;
 export const SEVERITIES = ['Leve', 'Moderado', 'Crítico'] as const;
 export type Severity = (typeof SEVERITIES)[number];
 export interface PiecePhoto { id: string; data: string; caption: string; width: number; height: number }
@@ -37,7 +38,7 @@ export function normalizeReport(stored: Partial<Report>): Report {
 export function shouldInitializeExample(report: Report | undefined, initialized: boolean | undefined): boolean {
   return !initialized && (!report || (!report.title && !report.client && !report.responsible && !report.notes && report.pieces.length === 0));
 }
-export function newPiece(segmentId = ''): Piece { return { id: crypto.randomUUID(), segmentId, code: '', name: '', location: '', condition: 'Boa', quantity: 1, notes: '', issues: [], photos: [] }; }
+export function newPiece(segmentId = ''): Piece { return { id: crypto.randomUUID(), segmentId, code: '', name: '', location: '', condition: 'Aprovado', quantity: 1, notes: '', issues: [], photos: [] }; }
 export function validatePiece(piece: Piece): string | null {
   if (!piece.segmentId) return 'Escolha o segmento da peça.';
   if (!piece.code.trim()) return 'Informe o código da peça.';
@@ -71,8 +72,8 @@ export function countSeverity(pieces: Piece[]) {
   return out;
 }
 export function segmentStats(pieces: Piece[]) {
-  const conditions: Record<Condition, number> = { Boa: 0, Regular: 0, Ruim: 0, Danificada: 0 };
-  for (const p of pieces) conditions[p.condition]++;
+  const conditions: Record<string, number> = {};
+  for (const p of pieces) conditions[p.condition] = (conditions[p.condition] ?? 0) + 1;
   return { pieces: pieces.length, units: pieces.reduce((n, p) => n + p.quantity, 0), conditions, severities: countSeverity(pieces), withProblem: pieces.filter(hasProblem).length };
 }
 export interface IssueRow { severity: Severity; segment: string; code: string; name: string; location: string; description: string }

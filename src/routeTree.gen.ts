@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedGerenciamentoRouteImport } from './routes/_authenticated/gerenciamento'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedCorrecaoIdRouteImport } from './routes/_authenticated/correcao.$id'
 
@@ -29,6 +30,12 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedGerenciamentoRoute =
+  AuthenticatedGerenciamentoRouteImport.update({
+    id: '/gerenciamento',
+    path: '/gerenciamento',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
@@ -43,11 +50,13 @@ const AuthenticatedCorrecaoIdRoute = AuthenticatedCorrecaoIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
+  '/gerenciamento': typeof AuthenticatedGerenciamentoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/correcao/$id': typeof AuthenticatedCorrecaoIdRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/gerenciamento': typeof AuthenticatedGerenciamentoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/': typeof AuthenticatedIndexRoute
   '/correcao/$id': typeof AuthenticatedCorrecaoIdRoute
@@ -56,19 +65,21 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/gerenciamento': typeof AuthenticatedGerenciamentoRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/correcao/$id': typeof AuthenticatedCorrecaoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/relatorios' | '/correcao/$id'
+  fullPaths: '/' | '/auth' | '/gerenciamento' | '/relatorios' | '/correcao/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/relatorios' | '/' | '/correcao/$id'
+  to: '/auth' | '/gerenciamento' | '/relatorios' | '/' | '/correcao/$id'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/gerenciamento'
     | '/_authenticated/relatorios'
     | '/_authenticated/'
     | '/_authenticated/correcao/$id'
@@ -102,6 +113,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/gerenciamento': {
+      id: '/_authenticated/gerenciamento'
+      path: '/gerenciamento'
+      fullPath: '/gerenciamento'
+      preLoaderRoute: typeof AuthenticatedGerenciamentoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/relatorios': {
       id: '/_authenticated/relatorios'
       path: '/relatorios'
@@ -120,12 +138,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedGerenciamentoRoute: typeof AuthenticatedGerenciamentoRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedCorrecaoIdRoute: typeof AuthenticatedCorrecaoIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedGerenciamentoRoute: AuthenticatedGerenciamentoRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedCorrecaoIdRoute: AuthenticatedCorrecaoIdRoute,
