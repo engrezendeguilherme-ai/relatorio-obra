@@ -4,6 +4,7 @@ import { ArrowLeft, Boxes, Camera, Download, Loader2, Trash2 } from 'lucide-reac
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useArchive } from '@/hooks/use-archive';
+import { PhotoImg } from '@/components/photo-img';
 import { CORRECTION_STATUSES, correctionRows, correctionStats, emptyCorrection, itemOf, type Correction, type CorrectionItem } from '@/lib/correction-model';
 import { compressPhoto, formatDate } from '@/lib/report-model';
 
@@ -53,9 +54,9 @@ function CorrectionPage() {
       <div className="correction-head"><div><h3>{r.code}{r.name ? ` — ${r.name}` : ''}</h3><p><span className="segment-tag" style={{ background: r.color }}>{r.segment}</span> <span className={`severity ${r.severity === 'Crítico' ? 'critico' : r.severity.toLowerCase()}`}>{r.severity}</span>{r.location ? ` · ${r.location}` : ''}</p><p className="correction-problem"><strong>Problema:</strong> {r.description || 'Sem descrição'}</p></div>
         <select aria-label={`Situação de ${r.code}`} value={r.item.status} onChange={e => setItem(r.issueId, { status: e.target.value as CorrectionItem['status'] })}>{CORRECTION_STATUSES.map(s => <option key={s}>{s}</option>)}</select></div>
       <div className="correction-body">
-        <div><div className="eyebrow">Antes</div>{r.originalPhotos[0] ? <img src={r.originalPhotos[0].data} alt={`Antes — ${r.code}`} /> : <div className="no-photo">Sem foto original</div>}</div>
+        <div><div className="eyebrow">Antes</div>{r.originalPhotos[0] ? <PhotoImg photo={r.originalPhotos[0]} alt={`Antes — ${r.code}`} /> : <div className="no-photo">Sem foto original</div>}</div>
         <div><div className="eyebrow">Depois</div>
-          <div className="after-photos">{r.item.photos.map(p => <div key={p.id} className="after-photo"><img src={p.data} alt={`Depois — ${r.code}`} /><Button variant="secondary" size="icon" aria-label="Remover foto" onClick={() => setItem(r.issueId, { photos: r.item.photos.filter(x => x.id !== p.id) })}><Trash2 /></Button></div>)}</div>
+          <div className="after-photos">{r.item.photos.map(p => <div key={p.id} className="after-photo"><PhotoImg photo={p} alt={`Depois — ${r.code}`} /><Button variant="secondary" size="icon" aria-label="Remover foto" onClick={() => setItem(r.issueId, { photos: r.item.photos.filter(x => x.id !== p.id) })}><Trash2 /></Button></div>)}</div>
           <label className="add-photo"><Camera size={18} />Adicionar foto da correção<input type="file" accept="image/*" multiple className="sr-only" onChange={e => { void addPhotos(r.issueId, e.target.files); e.target.value = ''; }} /></label>
           <label className="field mt-3">Observação da correção<textarea rows={2} value={r.item.note} onChange={e => setItem(r.issueId, { note: e.target.value })} placeholder="Ex.: Base lixada, tratada e repintada." /></label>
           <label className="field mt-3">Data<input type="date" value={r.item.date} onChange={e => setItem(r.issueId, { date: e.target.value })} /></label>

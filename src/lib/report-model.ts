@@ -5,7 +5,10 @@ export const CONDITIONS = DEFAULT_DECISIONS;
 export type Condition = string;
 export const SEVERITIES = ['Leve', 'Moderado', 'Crítico'] as const;
 export type Severity = (typeof SEVERITIES)[number];
-export interface PiecePhoto { id: string; data: string; caption: string; width: number; height: number }
+export type ShapeKind = 'circle' | 'arrow';
+/** Marking drawn over a photo. Coordinates are fractions (0–1) of the photo's width/height. Circle: opposite corners of its bounding box. Arrow: tail (x1,y1) to head (x2,y2). */
+export interface PhotoShape { id: string; kind: ShapeKind; x1: number; y1: number; x2: number; y2: number; color: string }
+export interface PiecePhoto { id: string; data: string; caption: string; width: number; height: number; shapes?: PhotoShape[] }
 export interface Issue { id: string; description: string; severity: Severity }
 export interface Segment { id: string; name: string; prefix: string; color: string }
 export interface PlanSheet { id: string; name: string; data: string; width: number; height: number }

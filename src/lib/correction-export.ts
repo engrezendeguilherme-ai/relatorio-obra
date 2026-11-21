@@ -1,9 +1,11 @@
 import { formatDate, type PiecePhoto, type Report } from './report-model';
 import { correctionRows, correctionStats, type Correction } from './correction-model';
+import { annotatedMap } from './photo-shapes';
 
 type RGB = [number, number, number];
 export async function generateCorrectionPdf(report: Report, c: Correction): Promise<Blob> {
   const { jsPDF } = await import('jspdf');
+  const marked = await annotatedMap([...report.pieces.flatMap(p => p.photos), ...Object.values(c.items).flatMap(i => i.photos)]);
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
   const margin = 18, width = 174, bottom = 270;
   const ink: RGB = [35, 47, 62], muted: RGB = [110, 119, 130], blue: RGB = [32, 89, 210];
@@ -19,7 +21,7 @@ export async function generateCorrectionPdf(report: Report, c: Correction): Prom
     pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.setTextColor(...muted); pdf.text(label, x, top);
     if (!p) { pdf.setDrawColor(210, 215, 222); pdf.rect(x, top + 2, w, 50); pdf.setFont('helvetica', 'normal'); pdf.text('Sem foto', x + w / 2, top + 28, { align: 'center' }); return 54; }
     const h = Math.min(70, w * p.height / p.width); const pw = h * p.width / p.height;
-    pdf.addImage(p.data, 'JPEG', x, top + 2, pw, h); pdf.setDrawColor(198, 205, 214); pdf.setLineWidth(.3); pdf.rect(x, top + 2, pw, h); return h + 4;
+    pdf.addImage(marked.get(p.id) ?? p.data, 'JPEG', x, top + 2, pw, h); pdf.setDrawColor(198, 205, 214); pdf.setLineWidth(.3); pdf.rect(x, top + 2, pw, h); return h + 4;
   };
   if (report.logo) { const h = Math.min(18, 50 * report.logo.height / report.logo.width); pdf.addImage(report.logo.data, 'JPEG', margin, 16, h * report.logo.width / report.logo.height, h); y = 16 + h + 10; }
   text('RELATÓRIO DE CORREÇÕES', 10, true, margin, width, blue); y += 4;

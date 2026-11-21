@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { AlertTriangle, ArrowDown, ArrowUp, Camera, GripVertical, ImagePlus, Loader2, MapPin, Plus, Upload, X } from 'lucide-react';
+import { AlertTriangle, ArrowDown, ArrowUp, Camera, GripVertical, ImagePlus, Loader2, MapPin, Plus, Shapes, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -7,6 +7,8 @@ import { compressPhoto, isDuplicateCode, moveItem, nextCode, SEVERITIES, validat
 import { decisionOptions, DEFAULT_DECISIONS } from '@/lib/inspection-settings';
 import { PlanBoard } from '@/components/plan-board';
 import { ContinuousCamera } from '@/components/continuous-camera';
+import { PhotoImg } from '@/components/photo-img';
+import { PhotoAnnotator } from '@/components/photo-annotator';
 
 export function PieceEditor({ initial, segments, pieces, plans = [], decisions = DEFAULT_DECISIONS, onSave, onClose }: { initial: Piece; segments: Segment[]; pieces: Piece[]; plans?: PlanSheet[]; decisions?: string[]; onSave: (piece: Piece) => void; onClose: () => void }) {
   const [piece, setPiece] = useState(() => { initial = initial.code ? initial : { ...initial, condition: decisions[0] ?? 'Aprovado' }; const seg = segments.find(s => s.id === initial.segmentId); return !initial.code && seg ? { ...initial, code: nextCode(seg.prefix, pieces, initial.id) } : initial; });
@@ -19,6 +21,7 @@ export function PieceEditor({ initial, segments, pieces, plans = [], decisions =
   const setIssue = (id: string, patch: { description?: string; severity?: Severity }) => setPiece(p => ({ ...p, issues: p.issues.map(i => i.id === id ? { ...i, ...patch } : i) }));
   const [uploading, setUploading] = useState(false);
   const [continuous, setContinuous] = useState(false);
+  const [annotating, setAnnotating] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
   const [planId, setPlanId] = useState(initial.marker?.planId ?? plans[0]?.id ?? '');
   const markedPlan = plans.find(pl => pl.id === piece.marker?.planId);
@@ -60,9 +63,10 @@ export function PieceEditor({ initial, segments, pieces, plans = [], decisions =
         <input ref={gallery} type="file" accept="image/*" multiple hidden onChange={e => { void upload(e.target.files); e.target.value = ''; }} /><input ref={camera} type="file" accept="image/*" capture="environment" hidden onChange={e => { void upload(e.target.files); e.target.value = ''; }} />
       </div>
       {continuous && <ContinuousCamera onPhoto={file => upload([file])} onClose={() => setContinuous(false)} onFallback={() => { setContinuous(false); camera.current?.click(); }} />}
-      <div className="photo-editor-grid">{piece.photos.map((photo, index) => <div className="photo-editor" key={photo.id} draggable onDragStart={() => { dragPhoto.current = index; }} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); e.stopPropagation(); const from = dragPhoto.current; dragPhoto.current = null; if (from !== null) setPiece(p => ({ ...p, photos: moveItem(p.photos, from, index) })); }}><img src={photo.data} alt={`Foto ${index + 1} da peça`} /><div className="photo-controls"><GripVertical size={15} /><span>Foto {index + 1}</span><Button type="button" variant="ghost" size="icon" title="Mover foto para cima" aria-label={`Mover foto ${index + 1} para cima`} disabled={index === 0} onClick={() => setPiece(p => ({ ...p, photos: moveItem(p.photos, index, index - 1) }))}><ArrowUp /></Button><Button type="button" variant="ghost" size="icon" title="Mover foto para baixo" aria-label={`Mover foto ${index + 1} para baixo`} disabled={index === piece.photos.length - 1} onClick={() => setPiece(p => ({ ...p, photos: moveItem(p.photos, index, index + 1) }))}><ArrowDown /></Button><Button type="button" variant="ghost" size="icon" title="Remover foto" aria-label={`Remover foto ${index + 1}`} onClick={() => setPiece(p => ({ ...p, photos: p.photos.filter(f => f.id !== photo.id) }))}><X /></Button></div><input aria-label={`Legenda da foto ${index + 1}`} placeholder="Adicione uma legenda..." value={photo.caption} onChange={e => setPiece(p => ({ ...p, photos: p.photos.map(f => f.id === photo.id ? { ...f, caption: e.target.value } : f) }))} /></div>)}</div>
+      <div className="photo-editor-grid">{piece.photos.map((photo, index) => <div className="photo-editor" key={photo.id} draggable onDragStart={() => { dragPhoto.current = index; }} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); e.stopPropagation(); const from = dragPhoto.current; dragPhoto.current = null; if (from !== null) setPiece(p => ({ ...p, photos: moveItem(p.photos, from, index) })); }}><PhotoImg photo={photo} alt={`Foto ${index + 1} da peça`} /><div className="photo-controls"><GripVertical size={15} /><span>Foto {index + 1}{photo.shapes?.length ? <small className="ml-1 text-muted-foreground">· {photo.shapes.length} marc.</small> : null}</span><Button type="button" variant="ghost" size="icon" title="Marcar com círculos e setas" aria-label={`Marcar foto ${index + 1} com círculos e setas`} onClick={() => setAnnotating(photo.id)}><Shapes /></Button><Button type="button" variant="ghost" size="icon" title="Mover foto para cima" aria-label={`Mover foto ${index + 1} para cima`} disabled={index === 0} onClick={() => setPiece(p => ({ ...p, photos: moveItem(p.photos, index, index - 1) }))}><ArrowUp /></Button><Button type="button" variant="ghost" size="icon" title="Mover foto para baixo" aria-label={`Mover foto ${index + 1} para baixo`} disabled={index === piece.photos.length - 1} onClick={() => setPiece(p => ({ ...p, photos: moveItem(p.photos, index, index + 1) }))}><ArrowDown /></Button><Button type="button" variant="ghost" size="icon" title="Remover foto" aria-label={`Remover foto ${index + 1}`} onClick={() => setPiece(p => ({ ...p, photos: p.photos.filter(f => f.id !== photo.id) }))}><X /></Button></div><input aria-label={`Legenda da foto ${index + 1}`} placeholder="Adicione uma legenda..." value={photo.caption} onChange={e => setPiece(p => ({ ...p, photos: p.photos.map(f => f.id === photo.id ? { ...f, caption: e.target.value } : f) }))} /></div>)}</div>
       {error && <p role="alert" className="form-error">{error}</p>}
       <div className="dialog-actions"><Button type="button" variant="outline" onClick={onClose} disabled={uploading}>Cancelar</Button><Button type="submit" disabled={uploading}>Salvar peça</Button></div>
     </form>
+    {(() => { const target = piece.photos.find(f => f.id === annotating); return target ? <PhotoAnnotator photo={target} onClose={() => setAnnotating(null)} onSave={shapes => { setPiece(p => ({ ...p, photos: p.photos.map(f => { if (f.id !== target.id) return f; const { shapes: _old, ...rest } = f; return shapes.length ? { ...rest, shapes } : rest; }) })); setAnnotating(null); }} /> : null; })()}
   </DialogContent></Dialog>;
 }

@@ -1,4 +1,5 @@
 import { planWithMarkers } from './plan-files';
+import { annotatedMap } from './photo-shapes';
 import { consolidatedIssues, countSeverity, criticalBySegment, DEFAULT_APP_NAME, figureLabel, figureNumbers, formatDate, groupBySegment, segmentStats, SEVERITIES, type Piece, type Report, type ReportFilter, type SegmentGroup } from './report-model';
 
 export function filename(report: Report, extension: string) {
@@ -26,6 +27,7 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
   const { jsPDF } = await import('jspdf');
   const groups = groupBySegment(report, filter);
   const figures = figureNumbers(groupBySegment(report).flatMap(g => g.pieces));
+  const marked = await annotatedMap(report.pieces.flatMap(p => p.photos));
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
   const margin = 18, width = 174, bottom = 270;
   const ink: RGB = [35, 47, 62], muted: RGB = [110, 119, 130], blue: RGB = [32, 89, 210];
@@ -137,7 +139,7 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
       const w = h * photo.width / photo.height;
       const x = margin + (width - w) / 2;
       ensure(h + capH);
-      pdf.addImage(photo.data, 'JPEG', x, y, w, h);
+      pdf.addImage(marked.get(photo.id) ?? photo.data, 'JPEG', x, y, w, h);
       pdf.setDrawColor(198, 205, 214); pdf.setLineWidth(.3); pdf.rect(x, y, w, h);
       pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.setTextColor(...ink); pdf.text(caption, margin + width / 2, y + h + 5, { align: 'center' });
       y += h + capH + 6;
@@ -213,6 +215,7 @@ export async function generateWord(report: Report, filter: ReportFilter): Promis
   const { Paragraph, TextRun, Table, TableRow, TableCell, WidthType, ShadingType } = d;
   const groups = groupBySegment(report, filter); const all = groups.flatMap(g => g.pieces);
   const figures = figureNumbers(groupBySegment(report).flatMap(g => g.pieces));
+  const marked = await annotatedMap(report.pieces.flatMap(p => p.photos));
   const para = (value: string, bold = false, color?: string) => new Paragraph({ children: [new TextRun(color ? { text: value, bold, color } : { text: value, bold })], spacing: { after: 120 } });
   const cell = (text: string, w: number, opts: { bold?: boolean; fill?: string; color?: string } = {}) => new TableCell({ width: { size: w, type: WidthType.DXA }, margins: { top: 80, bottom: 80, left: 110, right: 110 }, shading: { type: ShadingType.CLEAR, fill: opts.fill ?? 'FFFFFF' }, children: [new Paragraph({ children: [new TextRun({ text, bold: !!opts.bold, size: 18, ...(opts.color ? { color: opts.color } : {}) })] })] });
   const grid = (headers: string[], widths: number[], rows: string[][]) => new Table({ width: { size: 9026, type: WidthType.DXA }, columnWidths: widths, rows: [new TableRow({ tableHeader: true, children: headers.map((h, i) => cell(h, widths[i]!, { bold: true, fill: '232F3E', color: 'FFFFFF' })) }), ...rows.map((r, n) => new TableRow({ cantSplit: true, children: r.map((t, i) => cell(t, widths[i]!, { fill: n % 2 ? 'F5F7FA' : 'FFFFFF' })) }))] });
@@ -262,7 +265,7 @@ export async function generateWord(report: Report, filter: ReportFilter): Promis
         const off = { style: d.BorderStyle.NONE, size: 0, color: 'FFFFFF' };
         const noBorder = { top: off, bottom: off, left: off, right: off, insideHorizontal: off, insideVertical: off };
         children.push(new Table({ width: { size: 9026, type: WidthType.DXA }, columnWidths: [9026], alignment: d.AlignmentType.CENTER, borders: noBorder, rows: [new TableRow({ cantSplit: true, children: [new TableCell({ width: { size: 9026, type: WidthType.DXA }, borders: noBorder, margins: { top: 0, bottom: 160, left: 0, right: 0 }, children: [
-          new Table({ width: { size: dxa, type: WidthType.DXA }, columnWidths: [dxa], alignment: d.AlignmentType.CENTER, borders: noBorder, rows: [new TableRow({ cantSplit: true, children: [new TableCell({ width: { size: dxa, type: WidthType.DXA }, borders: { top: line, bottom: line, left: line, right: line }, margins: { top: 60, bottom: 60, left: 60, right: 60 }, children: [new Paragraph({ spacing: { after: 0 }, children: [new d.ImageRun({ type: 'jpg', data: toBytes(photo.data), transformation: { width: w, height: h }, altText: { title: piece.code, description: photo.caption || piece.name, name: photo.id } })] })] })] })] }),
+          new Table({ width: { size: dxa, type: WidthType.DXA }, columnWidths: [dxa], alignment: d.AlignmentType.CENTER, borders: noBorder, rows: [new TableRow({ cantSplit: true, children: [new TableCell({ width: { size: dxa, type: WidthType.DXA }, borders: { top: line, bottom: line, left: line, right: line }, margins: { top: 60, bottom: 60, left: 60, right: 60 }, children: [new Paragraph({ spacing: { after: 0 }, children: [new d.ImageRun({ type: 'jpg', data: toBytes(marked.get(photo.id) ?? photo.data), transformation: { width: w, height: h }, altText: { title: piece.code, description: photo.caption || piece.name, name: photo.id } })] })] })] })] }),
           new Paragraph({ alignment: d.AlignmentType.CENTER, spacing: { before: 100, after: 0 }, children: [new TextRun({ text: figureLabel(figures.get(photo.id)!, photo.caption), bold: true })] }),
         ] })] })] }), para(''));
       }

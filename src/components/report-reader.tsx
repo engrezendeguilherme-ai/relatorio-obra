@@ -3,6 +3,7 @@ import { Boxes, Eye, Map, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ReportPreview } from './report-preview';
 import { PlanBoard } from './plan-board';
+import { PhotoImg } from './photo-img';
 import { figureLabel, figureNumbers, groupBySegment, type Piece, type Report } from '@/lib/report-model';
 import type { TocEntry } from '@/lib/report-export';
 
@@ -25,7 +26,7 @@ export function ReportReader({ report }: { report: Report }) {
     <h2>{p.code} — {p.name}</h2><p className="mb-4 text-sm">{p.condition} · {p.location || 'Setor não informado'} · Quantidade {p.quantity}</p>
     {p.notes && <p className="mb-4 whitespace-pre-wrap text-sm">{p.notes}</p>}
     {p.issues.map(i => <p key={i.id} className="mb-2 text-sm"><b>{i.severity}</b> — {i.description}</p>)}
-    <div className="paper-photos mt-4">{p.photos.map(f => <figure key={f.id}><img src={f.data} alt={f.caption || p.code} /><figcaption>{figureLabel(numbers.get(f.id) ?? 1, f.caption)}</figcaption></figure>)}</div>
+    <div className="paper-photos mt-4">{p.photos.map(f => <figure key={f.id}><PhotoImg photo={f} alt={f.caption || p.code} /><figcaption>{figureLabel(numbers.get(f.id) ?? 1, f.caption)}</figcaption></figure>)}</div>
     <Button variant="outline" onClick={() => setSelected(null)}>Fechar detalhes</Button>
   </section>;
   return <>
@@ -36,7 +37,7 @@ export function ReportReader({ report }: { report: Report }) {
     </nav>
     {view === 'relatorio' ? <ReportPreview report={report} toc={toc} /> : <>
       <div className="grid gap-3 sm:grid-cols-2 mb-5"><div className="search-field"><Search /><input aria-label="Buscar peças" placeholder="Código, descrição ou setor" value={search} onChange={e => setSearch(e.target.value)} /></div><select aria-label="Segmento" value={segment} onChange={e => setSegment(e.target.value)}><option value="">Todos os segmentos</option>{report.segments.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
-      {view === 'planta' ? <PlanBoard plans={report.plans} pieces={pieces} segments={report.segments} planId={plan} onPlanChange={id => { setPlan(id); setSelected(null); }} onSelect={setSelected} /> : <div className="piece-list">{pieces.map(p => <article key={p.id} className="piece-row">{p.photos[0] && <img className="piece-thumb" src={p.photos[0].data} alt={p.code} />}<div className="piece-detail"><h3>{p.code}</h3><p>{p.name}</p><div className="piece-meta"><span>{p.condition}</span><span>{p.location}</span><span>{p.photos.length} fotos · {p.issues.length} apontamentos</span></div></div><Button variant="outline" size="sm" onClick={() => setSelected(p)}><Eye />Ver peça</Button></article>)}</div>}
+      {view === 'planta' ? <PlanBoard plans={report.plans} pieces={pieces} segments={report.segments} planId={plan} onPlanChange={id => { setPlan(id); setSelected(null); }} onSelect={setSelected} /> : <div className="piece-list">{pieces.map(p => <article key={p.id} className="piece-row">{p.photos[0] && <PhotoImg className="piece-thumb" photo={p.photos[0]} alt={p.code} />}<div className="piece-detail"><h3>{p.code}</h3><p>{p.name}</p><div className="piece-meta"><span>{p.condition}</span><span>{p.location}</span><span>{p.photos.length} fotos · {p.issues.length} apontamentos</span></div></div><Button variant="outline" size="sm" onClick={() => setSelected(p)}><Eye />Ver peça</Button></article>)}</div>}
       {!pieces.length && <p className="text-muted-foreground">Nenhuma peça encontrada.</p>}
       {selected && detail(selected)}
     </>}
