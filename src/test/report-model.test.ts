@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CONDITIONS, DEFAULT_SEGMENTS, IMAGE_QUALITY, imageDimensions, MAX_IMAGE_WIDTH, moveItem, validatePiece, emptyReport, shouldInitializeExample, nextCode, isDuplicateCode, naturalCompare, groupBySegment, consolidatedIssues, segmentStats, criticalBySegment, normalizeReport, type Piece } from '@/lib/report-model';
+import { hasCritical, CONDITIONS, DEFAULT_SEGMENTS, IMAGE_QUALITY, imageDimensions, MAX_IMAGE_WIDTH, moveItem, validatePiece, emptyReport, shouldInitializeExample, nextCode, isDuplicateCode, naturalCompare, groupBySegment, consolidatedIssues, segmentStats, criticalBySegment, normalizeReport, type Piece } from '@/lib/report-model';
 const piece: Piece = { id: '1', segmentId: 'seg-pilares', code: 'PC-001', name: '', location: '', condition: 'Boa', quantity: 1, notes: '', issues: [], photos: [] };
 describe('Regras das peças e fotos', () => {
   it('preenche exemplo apenas no primeiro relatório vazio', () => { expect(shouldInitializeExample(undefined, undefined)).toBe(true); expect(shouldInitializeExample(emptyReport(), undefined)).toBe(true); expect(shouldInitializeExample(emptyReport(), true)).toBe(false); });
@@ -66,4 +66,12 @@ describe('Gerenciamento das avaliações', () => {
   it('preserva a condição histórica sem aprovação automática', () => { expect(normalizeReport({ pieces: [piece] }).pieces[0]?.condition).toBe('Boa'); expect(decisionOptions(['Refazer'], 'Boa')).toEqual(['Boa', 'Refazer']); });
   it('contabiliza opções personalizadas e antigas sem perder peças', () => { expect(segmentStats([piece, { ...piece, condition: 'Refazer' }, { ...piece, condition: 'Inspecionar' }]).conditions).toEqual({ Boa: 1, Refazer: 1, Inspecionar: 1 }); });
   it('rejeita opções vazias e duplicadas', () => { expect(validateDecisions([])).not.toBeNull(); expect(validateDecisions([''])).not.toBeNull(); expect(validateDecisions(['Refazer', ' refazer '])).not.toBeNull(); expect(validateDecisions(['Aprovado', 'Refazer'])).toBeNull(); });
+});
+
+describe('hasCritical', () => {
+  it('só é verdadeiro quando há apontamento crítico', () => {
+    expect(hasCritical(piece)).toBe(false);
+    expect(hasCritical({ ...piece, issues: [{ id: 'a', description: 'x', severity: 'Leve' }] })).toBe(false);
+    expect(hasCritical({ ...piece, issues: [{ id: 'a', description: 'x', severity: 'Leve' }, { id: 'b', description: 'y', severity: 'Crítico' }] })).toBe(true);
+  });
 });

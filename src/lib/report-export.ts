@@ -89,7 +89,7 @@ export async function buildPdf(report: Report, filter: ReportFilter) {
     const r = Math.max(14, pi.plan.width / 65), s = w / pi.plan.width;
     for (const p of all.filter(q => q.marker?.planId === pi.plan.id)) {
       const mx = x0 + p.marker!.x * w, my = y0 + p.marker!.y * h;
-      planLinks.push({ page: pdf.getNumberOfPages(), x: mx - r * 0.6 * s, y: my - r * 0.8 * s, w: r * (2 + p.code.length * 0.75) * s, h: r * 1.6 * s, code: p.code });
+      planLinks.push({ page: pdf.getNumberOfPages(), x: mx - r * 0.6 * s, y: my - r * 0.8 * s, w: r * (2.4 + (p.code.length + (p.issues.some(i => i.severity === 'Crítico') ? 2 : 0)) * 0.75) * s, h: r * 1.6 * s, code: p.code });
     }
     text(`${pi.count} peças marcadas nesta planta — toque em uma marcação para ir até a peça`, 9, false, margin, width, muted);
   }

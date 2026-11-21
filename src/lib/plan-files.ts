@@ -31,15 +31,21 @@ export async function planWithMarkers(plan: PlanSheet, pieces: Piece[], segments
   const canvas = document.createElement('canvas'); canvas.width = plan.width; canvas.height = plan.height;
   const ctx = canvas.getContext('2d')!; ctx.drawImage(img, 0, 0);
   const r = Math.max(14, plan.width / 65); ctx.font = `bold ${Math.round(r * 1.1)}px Arial`; ctx.textBaseline = 'middle';
-  for (const p of pieces) {
+  // Critical pieces are drawn last (on top), in red, with a halo and "!" so they stand out in print.
+  const critical = (p: Piece) => p.issues.some(i => i.severity === 'Crítico');
+  for (const p of [...pieces].sort((a, b) => Number(critical(a)) - Number(critical(b)))) {
     if (!p.marker) continue;
     const x = p.marker.x * plan.width, y = p.marker.y * plan.height;
-    const color = segments.find(s => s.id === p.segmentId)?.color ?? '#2059d2';
+    const crit = critical(p);
+    const color = crit ? '#dc2626' : segments.find(s => s.id === p.segmentId)?.color ?? '#2059d2';
+    const label = crit ? `! ${p.code}` : p.code;
+    if (crit) { ctx.fillStyle = 'rgba(220, 38, 38, 0.28)'; ctx.beginPath(); ctx.arc(x, y, r * 1.15, 0, Math.PI * 2); ctx.fill(); }
     ctx.fillStyle = color; ctx.strokeStyle = 'white'; ctx.lineWidth = r * 0.25;
-    ctx.beginPath(); ctx.arc(x, y, r * 0.55, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    const w = ctx.measureText(p.code).width + r;
-    ctx.fillRect(x + r * 0.7, y - r * 0.75, w, r * 1.5); ctx.strokeRect(x + r * 0.7, y - r * 0.75, w, r * 1.5);
-    ctx.fillStyle = 'white'; ctx.fillText(p.code, x + r * 1.2, y + 1);
+    ctx.beginPath(); ctx.arc(x, y, r * (crit ? 0.75 : 0.55), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    const w = ctx.measureText(label).width + r;
+    const lx = x + r * (crit ? 0.9 : 0.7);
+    ctx.fillRect(lx, y - r * 0.75, w, r * 1.5); ctx.strokeRect(lx, y - r * 0.75, w, r * 1.5);
+    ctx.fillStyle = 'white'; ctx.fillText(label, lx + r * 0.5, y + 1);
   }
   return canvas.toDataURL('image/jpeg', 0.85);
 }

@@ -58,6 +58,7 @@ export function isDuplicateCode(code: string, pieces: Piece[], ignoreId?: string
 }
 export interface ReportFilter { segmentIds: string[] | null; onlyProblems: boolean }
 export const hasProblem = (p: Piece) => p.issues.length > 0;
+export const hasCritical = (p: Piece) => p.issues.some(i => i.severity === 'Crítico');
 export interface SegmentGroup { segment: Segment; pieces: Piece[] }
 /** Segments in configured order, empty ones omitted, pieces sorted naturally by code. */
 export function groupBySegment(report: Report, filter: ReportFilter = { segmentIds: null, onlyProblems: false }): SegmentGroup[] {
