@@ -38,6 +38,35 @@ export function arrowOf(s: PhotoShape, w: number, h: number) {
   return { x1, y1, bx: x2 - ux * head * 0.8, by: y2 - uy * head * 0.8, tip, left, right, points: `${tip.x},${tip.y} ${left.x},${left.y} ${right.x},${right.y}` };
 }
 
+export function shapeBounds(s: PhotoShape) {
+  return { minX: Math.min(s.x1, s.x2), maxX: Math.max(s.x1, s.x2), minY: Math.min(s.y1, s.y2), maxY: Math.max(s.y1, s.y2) };
+}
+/** Moves a marking by (dx, dy) fractions, keeping its size and stopping at the photo edges. */
+export function moveShape(s: PhotoShape, dx: number, dy: number): PhotoShape {
+  const b = shapeBounds(s);
+  const mx = Math.min(1 - b.maxX, Math.max(-b.minX, dx)), my = Math.min(1 - b.maxY, Math.max(-b.minY, dy));
+  return { ...s, x1: s.x1 + mx, x2: s.x2 + mx, y1: s.y1 + my, y2: s.y2 + my };
+}
+/**
+ * Whether point p (fractions) touches the marking. tolPx is the grab distance in image pixels.
+ * With inside=true a circle can also be grabbed from within; otherwise only near its outline.
+ */
+export function hitShape(s: PhotoShape, p: Point, w: number, h: number, tolPx: number, inside = false) {
+  const px = p.x * w, py = p.y * h;
+  if (s.kind === 'arrow') {
+    const x1 = s.x1 * w, y1 = s.y1 * h, x2 = s.x2 * w, y2 = s.y2 * h;
+    const len2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
+    const t = len2 ? Math.min(1, Math.max(0, ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / len2)) : 0;
+    return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1))) <= tolPx;
+  }
+  const e = ellipseOf(s, w, h);
+  const dx = px - e.cx, dy = py - e.cy, d = Math.hypot(dx, dy);
+  if (e.rx < 1 || e.ry < 1) return d <= tolPx;
+  const theta = Math.atan2(dy, dx);
+  const r = (e.rx * e.ry) / Math.hypot(e.ry * Math.cos(theta), e.rx * Math.sin(theta));
+  return inside ? d <= r + tolPx : Math.abs(d - r) <= tolPx;
+}
+
 /** Draws markings on a canvas of the photo's size: a white outline first, then the colour, so they read on any background. */
 export function drawShapes(ctx: CanvasRenderingContext2D, w: number, h: number, shapes: PhotoShape[]) {
   const sw = strokeWidth(w, h);

@@ -49,3 +49,31 @@ describe('Marcações nas fotos', () => {
     expect((await annotatedMap([broken])).get('f3')).toBe(broken.data);
   });
 });
+
+import { hitShape, moveShape, shapeBounds } from '@/lib/photo-shapes';
+describe('Mover e selecionar marcações', () => {
+  const circle = buildShape('circle', '#000', { x: 0.2, y: 0.2 }, { x: 0.4, y: 0.6 }, 'c');
+  it('move mantendo o tamanho e para na borda da foto', () => {
+    const m = moveShape(circle, 0.1, 0.05);
+    expect(m.x1).toBeCloseTo(0.3); expect(m.x2).toBeCloseTo(0.5); expect(m.y1).toBeCloseTo(0.25); expect(m.y2).toBeCloseTo(0.65);
+    const edge = moveShape(circle, 5, 5);
+    const b = shapeBounds(edge);
+    expect(b.maxX).toBeCloseTo(1); expect(b.maxY).toBeCloseTo(1);
+    expect(b.maxX - b.minX).toBeCloseTo(0.2); expect(b.maxY - b.minY).toBeCloseTo(0.4);
+    const left = shapeBounds(moveShape(circle, -5, -5));
+    expect(left.minX).toBeCloseTo(0); expect(left.minY).toBeCloseTo(0);
+  });
+  it('seleciona o círculo pelo contorno e, se permitido, por dentro', () => {
+    // elipse: centro (0.3, 0.4), 1000x500 px → centro (300, 200), rx 100, ry 100
+    expect(hitShape(circle, { x: 0.4, y: 0.4 }, 1000, 500, 20)).toBe(true); // sobre o contorno
+    expect(hitShape(circle, { x: 0.3, y: 0.4 }, 1000, 500, 20)).toBe(false); // centro: só com inside
+    expect(hitShape(circle, { x: 0.3, y: 0.4 }, 1000, 500, 20, true)).toBe(true);
+    expect(hitShape(circle, { x: 0.9, y: 0.9 }, 1000, 500, 20, true)).toBe(false);
+  });
+  it('seleciona a seta perto da haste e não longe dela', () => {
+    const arrow = buildShape('arrow', '#000', { x: 0.1, y: 0.5 }, { x: 0.6, y: 0.5 }, 'a');
+    expect(hitShape(arrow, { x: 0.3, y: 0.52 }, 1000, 500, 20)).toBe(true);
+    expect(hitShape(arrow, { x: 0.3, y: 0.7 }, 1000, 500, 20)).toBe(false);
+    expect(hitShape(arrow, { x: 0.9, y: 0.5 }, 1000, 500, 20)).toBe(false);
+  });
+});
