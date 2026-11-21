@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { compressPhoto, isDuplicateCode, moveItem, nextCode, SEVERITIES, validatePiece, type Piece, type PiecePhoto, type PlanSheet, type Segment, type Severity } from '@/lib/report-model';
 import { decisionOptions, DEFAULT_DECISIONS } from '@/lib/inspection-settings';
 import { PlanBoard } from '@/components/plan-board';
+import { ContinuousCamera } from '@/components/continuous-camera';
 
 export function PieceEditor({ initial, segments, pieces, plans = [], decisions = DEFAULT_DECISIONS, onSave, onClose }: { initial: Piece; segments: Segment[]; pieces: Piece[]; plans?: PlanSheet[]; decisions?: string[]; onSave: (piece: Piece) => void; onClose: () => void }) {
   const [piece, setPiece] = useState(() => { initial = initial.code ? initial : { ...initial, condition: decisions[0] ?? 'Aprovado' }; const seg = segments.find(s => s.id === initial.segmentId); return !initial.code && seg ? { ...initial, code: nextCode(seg.prefix, pieces, initial.id) } : initial; });
@@ -17,6 +18,7 @@ export function PieceEditor({ initial, segments, pieces, plans = [], decisions =
   }
   const setIssue = (id: string, patch: { description?: string; severity?: Severity }) => setPiece(p => ({ ...p, issues: p.issues.map(i => i.id === id ? { ...i, ...patch } : i) }));
   const [uploading, setUploading] = useState(false);
+  const [continuous, setContinuous] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [planId, setPlanId] = useState(initial.marker?.planId ?? plans[0]?.id ?? '');
   const markedPlan = plans.find(pl => pl.id === piece.marker?.planId);
@@ -54,9 +56,10 @@ export function PieceEditor({ initial, segments, pieces, plans = [], decisions =
       <div className="photo-drop" onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); void upload(e.dataTransfer.files); }}>
         {uploading ? <Loader2 className="animate-spin" /> : <ImagePlus />}
         <strong>{uploading ? 'Preparando fotos...' : 'Adicione suas fotos'}</strong><span>Arraste as imagens ou selecione do dispositivo</span>
-        <div className="flex flex-wrap justify-center gap-2"><Button type="button" variant="outline" onClick={() => gallery.current?.click()} disabled={uploading}><Upload />Selecionar fotos</Button><Button type="button" variant="outline" onClick={() => camera.current?.click()} disabled={uploading}><Camera />Câmera</Button></div>
+        <div className="flex flex-wrap justify-center gap-2"><Button type="button" variant="outline" onClick={() => gallery.current?.click()} disabled={uploading}><Upload />Selecionar fotos</Button><Button type="button" variant="outline" onClick={() => setContinuous(true)} disabled={uploading}><Camera />Câmera</Button></div>
         <input ref={gallery} type="file" accept="image/*" multiple hidden onChange={e => { void upload(e.target.files); e.target.value = ''; }} /><input ref={camera} type="file" accept="image/*" capture="environment" hidden onChange={e => { void upload(e.target.files); e.target.value = ''; }} />
       </div>
+      {continuous && <ContinuousCamera onPhoto={file => upload([file])} onClose={() => setContinuous(false)} onFallback={() => { setContinuous(false); camera.current?.click(); }} />}
       <div className="photo-editor-grid">{piece.photos.map((photo, index) => <div className="photo-editor" key={photo.id} draggable onDragStart={() => { dragPhoto.current = index; }} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); e.stopPropagation(); const from = dragPhoto.current; dragPhoto.current = null; if (from !== null) setPiece(p => ({ ...p, photos: moveItem(p.photos, from, index) })); }}><img src={photo.data} alt={`Foto ${index + 1} da peça`} /><div className="photo-controls"><GripVertical size={15} /><span>Foto {index + 1}</span><Button type="button" variant="ghost" size="icon" title="Mover foto para cima" aria-label={`Mover foto ${index + 1} para cima`} disabled={index === 0} onClick={() => setPiece(p => ({ ...p, photos: moveItem(p.photos, index, index - 1) }))}><ArrowUp /></Button><Button type="button" variant="ghost" size="icon" title="Mover foto para baixo" aria-label={`Mover foto ${index + 1} para baixo`} disabled={index === piece.photos.length - 1} onClick={() => setPiece(p => ({ ...p, photos: moveItem(p.photos, index, index + 1) }))}><ArrowDown /></Button><Button type="button" variant="ghost" size="icon" title="Remover foto" aria-label={`Remover foto ${index + 1}`} onClick={() => setPiece(p => ({ ...p, photos: p.photos.filter(f => f.id !== photo.id) }))}><X /></Button></div><input aria-label={`Legenda da foto ${index + 1}`} placeholder="Adicione uma legenda..." value={photo.caption} onChange={e => setPiece(p => ({ ...p, photos: p.photos.map(f => f.id === photo.id ? { ...f, caption: e.target.value } : f) }))} /></div>)}</div>
       {error && <p role="alert" className="form-error">{error}</p>}
       <div className="dialog-actions"><Button type="button" variant="outline" onClick={onClose} disabled={uploading}>Cancelar</Button><Button type="submit" disabled={uploading}>Salvar peça</Button></div>

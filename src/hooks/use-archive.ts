@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { get, set } from '@/lib/cloud-store';
 import { toast } from 'sonner';
 import type { Correction, SavedReport } from '@/lib/correction-model';
+import { updateArchive } from '@/lib/archive-model';
 
 const REPORTS_KEY = 'saved-reports-v1', CORRECTIONS_KEY = 'corrections-v1';
 export function useArchive() {
@@ -32,5 +33,12 @@ export function useArchive() {
 /** Adds a copy of the current report to the saved list (used from the workspace). */
 export async function archiveReport(saved: SavedReport) {
   const list = (await get<SavedReport[]>(REPORTS_KEY)) ?? [];
-  await set(REPORTS_KEY, [saved, ...list]);
+  const result = updateArchive(list, saved);
+  if (result.previous && JSON.stringify(result.previous.report) !== JSON.stringify(result.saved.report)) {
+    const key = `report-backups:${result.saved.id}`;
+    const backups = await get<SavedReport[]>(key) ?? [];
+    await set(key, [result.previous, ...backups].slice(0, 5));
+  }
+  await set(REPORTS_KEY, result.reports);
+  return result;
 }

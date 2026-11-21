@@ -14,7 +14,7 @@ export interface PlanMarker { planId: string; x: number; y: number }
 export interface Piece { marker?: PlanMarker | null; id: string; segmentId: string; code: string; name: string; location: string; condition: Condition; quantity: number; notes: string; issues: Issue[]; photos: PiecePhoto[] }
 export interface Logo { data: string; width: number; height: number }
 export const DEFAULT_APP_NAME = 'Relatórios da estrutura metálica';
-export interface Report { appName: string; title: string; client: string; date: string; responsible: string; notes: string; footer: string; logo: Logo | null; plans: PlanSheet[]; segments: Segment[]; pieces: Piece[] }
+export interface Report { id?: string; appName: string; title: string; client: string; date: string; responsible: string; notes: string; footer: string; logo: Logo | null; plans: PlanSheet[]; segments: Segment[]; pieces: Piece[] }
 
 export const DEFAULT_SEGMENTS: Segment[] = [
   { id: 'seg-pilares', name: 'Pilares', prefix: 'PL', color: '#2059d2' },

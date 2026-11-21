@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedGerenciamentoRouteImport } from './routes/_authenticated/gerenciamento'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
+import { Route as ConsultaTokenRouteImport } from './routes/consulta.$token'
 import { Route as AuthenticatedCorrecaoIdRouteImport } from './routes/_authenticated/correcao.$id'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -41,6 +42,11 @@ const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
   path: '/relatorios',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ConsultaTokenRoute = ConsultaTokenRouteImport.update({
+  id: '/consulta/$token',
+  path: '/consulta/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedCorrecaoIdRoute = AuthenticatedCorrecaoIdRouteImport.update({
   id: '/correcao/$id',
   path: '/correcao/$id',
@@ -52,12 +58,14 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/gerenciamento': typeof AuthenticatedGerenciamentoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/consulta/$token': typeof ConsultaTokenRoute
   '/correcao/$id': typeof AuthenticatedCorrecaoIdRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/gerenciamento': typeof AuthenticatedGerenciamentoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/consulta/$token': typeof ConsultaTokenRoute
   '/': typeof AuthenticatedIndexRoute
   '/correcao/$id': typeof AuthenticatedCorrecaoIdRoute
 }
@@ -67,20 +75,34 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/gerenciamento': typeof AuthenticatedGerenciamentoRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/consulta/$token': typeof ConsultaTokenRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/correcao/$id': typeof AuthenticatedCorrecaoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/gerenciamento' | '/relatorios' | '/correcao/$id'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/gerenciamento'
+    | '/relatorios'
+    | '/consulta/$token'
+    | '/correcao/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/gerenciamento' | '/relatorios' | '/' | '/correcao/$id'
+  to:
+    | '/auth'
+    | '/gerenciamento'
+    | '/relatorios'
+    | '/consulta/$token'
+    | '/'
+    | '/correcao/$id'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/gerenciamento'
     | '/_authenticated/relatorios'
+    | '/consulta/$token'
     | '/_authenticated/'
     | '/_authenticated/correcao/$id'
   fileRoutesById: FileRoutesById
@@ -88,6 +110,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ConsultaTokenRoute: typeof ConsultaTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -127,6 +150,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/consulta/$token': {
+      id: '/consulta/$token'
+      path: '/consulta/$token'
+      fullPath: '/consulta/$token'
+      preLoaderRoute: typeof ConsultaTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/correcao/$id': {
       id: '/_authenticated/correcao/$id'
       path: '/correcao/$id'
@@ -157,6 +187,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ConsultaTokenRoute: ConsultaTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

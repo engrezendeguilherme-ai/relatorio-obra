@@ -1,4 +1,7 @@
 # Relatórios de peças
+- [ ] Câmera contínua com fotos separadas e legendas posteriores.
+- [ ] Atualizar o mesmo relatório salvo sem duplicar, mantendo backups anteriores.
+- [ ] Compartilhar relatório por link revogável com lista, planta e prévia somente leitura.
 - [x] Trocar as condições de novas peças por decisões de inspeção e preservar avaliações antigas.
 - [x] Criar gerenciamento privado das opções, com salvamento offline e online; verificar no celular.
 - [x] Preencher exemplo com três peças e fotos sem substituir registros existentes; verificar pré-visualização e exportação.

@@ -61,7 +61,7 @@ function Index() {
     try { const p = await compressPhoto(file, 600); setReport(r => ({ ...r, logo: { data: p.data, width: p.width, height: p.height } })); setPrepared(null); }
     catch { toast.error('Não foi possível abrir a imagem da logo. Use JPG, PNG ou WebP.'); }
   }
-  async function saveToArchive() { try { await archiveReport(snapshot(report)); toast.success('Relatório salvo em “Relatórios salvos”'); } catch { toast.error('Não foi possível salvar o relatório.'); } }
+  async function saveToArchive() { if (busy === 'archive') return; setBusy('archive'); try { const result = await archiveReport(snapshot(report)); setReport(r => ({ ...r, id: result.saved.id })); toast.success(result.previous ? 'Relatório atualizado; versão anterior guardada em backup' : 'Relatório salvo em “Relatórios salvos”'); } catch { toast.error('Não foi possível salvar o relatório.'); } finally { setBusy(null); } }
   async function uploadPlans(files: File[]) {
     if (!files.length) return;
     setBusy('plan');

@@ -37,9 +37,11 @@ use the editor.
 - Report grouping, stats and issue ordering live in pure functions in `report-model.ts`, shared by preview, PDF, Word and Excel; keeps every output consistent.
 - Photo figure numbers come from pure helpers in `report-model.ts` computed over the unfiltered grouped order, so a photo keeps the same number in the preview and in every exported document even when export filters hide other pieces.
 - PDF summary pages are reserved up front and filled after layout; the preview reuses `buildPdf` page numbers so the on-screen summary matches the file.
-- Saved reports are independent snapshots (`saved-reports-v1`) and corrections are keyed by snapshot id (`corrections-v1`) with per-issue status, note and photos; later edits in the workspace never alter a saved report or its corrections.
+- Saved reports update only on explicit archive saves, matched by stable identity (legacy title/client/date fallback); keep five previous snapshots in account-scoped backup records and retain correction ids, so workspace edits remain independent until saved.
 - Project plans are stored on the report as JPEG sheets (PDF pages rendered with pdfjs-dist) and pieces keep an optional marker with fractional x/y; outputs draw markers onto the sheet so PDF, Word and screen match at any size.
 - Keep installation manifest-only without an app-shell service worker; offline edits use IndexedDB in an already opened app, while a fully offline cold launch is not supported and previews remain uncached.
 - Images inside synced records are uploaded one by one to the private `photos` bucket by content hash and replaced with `photo-ref:` references online, then rehydrated and cached locally; keeps records small so slow connections never block saving.
 
 - Inspection decision options are account-scoped settings in the existing offline-first store; historical piece values and archived snapshots are never relabeled automatically, and summaries count the actual stored labels.
+- Read-only sharing uses hashed random capabilities in owner-only rows, a narrow read RPC, and short-lived signed photo URLs scoped to the authorized payload; anonymous visitors never receive edit privileges or access to other account records.
+- Continuous camera capture uses a component-owned media stream stopped on unmount; append each compressed photo independently without closing the piece editor.
