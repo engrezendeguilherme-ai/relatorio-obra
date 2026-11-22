@@ -58,7 +58,7 @@ export const readSharedReport = createServerFn({ method: 'GET' })
             const { data: signed, error: signError } = await supabaseAdmin.storage.from('photos').createSignedUrl(`${owner.data}/${hash}.jpg`, 300);
             if (signError || !signed) throw new Error('Não foi possível carregar as fotos.');
             const path = new URL(signed.signedUrl);
-            return `${import.meta.env.VITE_SUPABASE_URL}${path.pathname}${path.search}`;
+            return `${import.meta.env['VITE_SUPABASE_URL']}${path.pathname}${path.search}`;
           })();
           photoUrls.set(hash, pending);
         }
