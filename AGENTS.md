@@ -43,5 +43,6 @@ use the editor.
 - Images inside synced records are uploaded one by one to the private `photos` bucket by content hash and replaced with `photo-ref:` references online, then rehydrated and cached locally; keeps records small so slow connections never block saving.
 
 - Inspection decision options are account-scoped settings in the existing offline-first store; historical piece values and archived snapshots are never relabeled automatically, and summaries count the actual stored labels.
+- Version inspection settings and append newly introduced choices once through a pure upgrade helper; this preserves custom choices and allows later removal without restoring them on reload.
 - Read-only sharing uses hashed random capabilities in owner-only rows, a narrow read RPC, and short-lived signed photo URLs scoped to the authorized payload; anonymous visitors never receive edit privileges or access to other account records.
 - Continuous camera capture uses a component-owned media stream stopped on unmount; append each compressed photo independently without closing the piece editor.

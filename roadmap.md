@@ -1,4 +1,5 @@
 # Relatórios de peças
+- [x] Acrescentar “Necessita retoque” e “Soldagem irregular” às avaliações, preservando opções personalizadas e registros existentes.
 - [ ] Câmera contínua com fotos separadas e legendas posteriores.
 - [ ] Atualizar o mesmo relatório salvo sem duplicar, mantendo backups anteriores.
 - [ ] Compartilhar relatório por link revogável com lista, planta e prévia somente leitura.
